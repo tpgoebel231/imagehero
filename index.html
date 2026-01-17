@@ -3,93 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImageHero.app | Professional Image Tools</title>
+    <title>ImageHero.app | Professional Browser-Based Image Utilities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; }
-        body { font-family: sans-serif; line-height: 1.6; color: #1e293b; background: var(--bg); padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        canvas { border: 2px solid #e2e8f0; border-radius: 8px; max-width: 100%; cursor: crosshair; background: #cbd5e1; display: block; margin: 1rem 0; }
-        .controls { display: flex; gap: 10px; margin-bottom: 1rem; }
-        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        body { background-color: #111827; color: #f3f4f6; }
+        .gradient-text { background: linear-gradient(to right, #60a5fa, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tool-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-<div class="container">
-    <h1>ImageHero.app 🛡️</h1>
-
-    <div class="card">
-        <h2>Clone Stamp</h2>
-        <p>Alt+Click to select source area. Click to stamp/clone.</p>
-        <div class="controls">
-            <input type="file" id="cloneInput" accept="image/*">
-            <button onclick="location.reload()">Reset</button>
+    <header class="container mx-auto px-6 py-16 text-center">
+        <h1 class="text-5xl md:text-7xl font-extrabold mb-6">
+            <span class="gradient-text">ImageHero.app</span> 🛡️
+        </h1>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+            Professional-grade image tools that run entirely in your browser. 
+            No uploads, no server processing, 100% privacy.
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="#tools" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full transition shadow-lg">Explore Tools</a>
+            <a href="https://github.com/tpgoebel231/imagehero" target="_blank" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-3 px-8 rounded-full border border-gray-700 transition">View on GitHub</a>
         </div>
-        <canvas id="cloneCanvas"></canvas>
+    </header>
+
+    <div class="container mx-auto px-6 mb-16">
+        <div class="h-24 bg-gray-900 border border-dashed border-gray-700 rounded-lg flex items-center justify-center text-gray-500 italic text-sm">
+            AdSense Space — Helps keep these tools free and private.
+        </div>
     </div>
 
-    <div class="card">
-        <h2>PNG Transparency</h2>
-        <p>Click a color on the image to make it transparent.</p>
-        <div class="controls">
-            <input type="file" id="transInput" accept="image/*">
-            <button onclick="downloadOutput()">Download PNG</button>
+    <main id="tools" class="container mx-auto px-6 py-10 grid md:grid-cols-2 gap-8">
+        
+        <div class="tool-card bg-gray-900 border border-gray-800 p-8 rounded-2xl transition duration-300 flex flex-col">
+            <div class="h-12 w-12 bg-red-900/30 text-red-500 rounded-lg flex items-center justify-center mb-6 text-2xl">
+                <i class="fa-solid fa-eraser"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">PNG Transparency Pro</h2>
+            <p class="text-gray-400 mb-8 flex-1">
+                Remove backgrounds and isolate objects with ease. Features a magic wand color selector and a soft-edge restore brush for precision masking.
+            </p>
+            <a href="/transparency/" class="w-full bg-gray-800 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl text-center transition">Launch Transparency Tool</a>
         </div>
-        <canvas id="transCanvas"></canvas>
-    </div>
-</div>
 
-<script>
-    const setupCanvas = (inputId, canvasId, isTransparency) => {
-        const input = document.getElementById(inputId);
-        const canvas = document.getElementById(canvasId);
-        const ctx = canvas.getContext('2d');
-        let sourceX = 0, sourceY = 0;
+        <div class="tool-card bg-gray-900 border border-gray-800 p-8 rounded-2xl transition duration-300 flex flex-col">
+            <div class="h-12 w-12 bg-blue-900/30 text-blue-500 rounded-lg flex items-center justify-center mb-6 text-2xl">
+                <i class="fa-solid fa-stamp"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Precision Clone Stamp</h2>
+            <p class="text-gray-400 mb-8 flex-1">
+                Heal images and remove unwanted artifacts using advanced canvas cloning technology. Features adjustable brush hardness and opacity.
+            </p>
+            <a href="/clone-stamp/" class="w-full bg-gray-800 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl text-center transition">Launch Clone Tool</a>
+        </div>
 
-        input.onchange = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-            };
-            img.src = URL.createObjectURL(e.target.files[0]);
-        };
+    </main>
 
-        canvas.onclick = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    <section class="bg-gray-900/50 border-t border-gray-800 py-20 mt-10">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <h3 class="text-3xl font-bold mb-6 text-blue-400 text-center">Privacy-First Image Processing</h3>
+            <div class="space-y-6 text-gray-400 leading-relaxed">
+                <p>
+                    In an era where personal data is often treated as a commodity, <strong>ImageHero.app</strong> was built on a simple principle: your creative work belongs on your machine. Most "online editors" require you to upload your files to a remote server, where they are stored, processed, and potentially analyzed.
+                </p>
+                <p>
+                    By utilizing the <strong>HTML5 Canvas API</strong> and local JavaScript execution, our tools perform complex manipulations—like clone stamping and color masking—directly in your browser's memory. This isn't just a privacy win; it's a performance win. There is no latency from uploading large assets, allowing for real-time, responsive editing.
+                </p>
+                <p>
+                    Whether you are a professional preparing assets for a high-stakes marketing campaign or a content creator cleaning up social media posts, our browser-based suite provides the utility of heavy desktop software with the convenience of a URL.
+                </p>
+            </div>
+        </div>
+    </section>
 
-            if (isTransparency) {
-                // Transparency Logic: Remove selected color
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                const targetPixel = ctx.getImageData(x, y, 1, 1).data;
-                for (let i = 0; i < data.length; i += 4) {
-                    if (data[i] === targetPixel[0] && data[i+1] === targetPixel[1] && data[i+2] === targetPixel[2]) {
-                        data[i+3] = 0;
-                    }
-                }
-                ctx.putImageData(imageData, 0, 0);
-            } else if (e.altKey) {
-                sourceX = x; sourceY = y;
-            } else {
-                ctx.drawImage(canvas, sourceX - 15, sourceY - 15, 30, 30, x - 15, y - 15, 30, 30);
-            }
-        };
-    };
+    <footer class="container mx-auto px-6 py-12 text-center text-gray-500 text-sm">
+        <div class="flex justify-center gap-6 mb-6">
+            <a href="/privacy-policy" class="hover:text-blue-400">Privacy Policy</a>
+            <a href="/terms" class="hover:text-blue-400">Terms of Service</a>
+            <a href="https://robots4real.com" target="_blank" class="hover:text-blue-400">Robots4Real</a>
+        </div>
+        <p>© 2026 ImageHero.app. A TPG Media Project.</p>
+    </footer>
 
-    setupCanvas('cloneInput', 'cloneCanvas', false);
-    setupCanvas('transInput', 'transCanvas', true);
-
-    function downloadOutput() {
-        const link = document.createElement('a');
-        link.download = 'imagehero-export.png';
-        link.href = document.getElementById('transCanvas').toDataURL();
-        link.click();
-    }
-</script>
 </body>
 </html>
