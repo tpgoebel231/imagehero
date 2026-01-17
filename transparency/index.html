@@ -151,41 +151,71 @@
     </div>
 
     <script>
-        const imageLoader = document.getElementById('imageLoader');
-        const mainCanvas = document.getElementById('mainCanvas');
-        const uiCanvas = document.getElementById('uiCanvas');
-        const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
-        const uiCtx = uiCanvas.getContext('2d');
-        const canvasStack = document.getElementById('canvasStack');
-        const emptyState = document.getElementById('emptyState');
-        const statusMsg = document.getElementById('statusMsg');
-        const coordDisplay = document.getElementById('coordDisplay');
-        const toolEraserBtn = document.getElementById('toolEraser');
-        const toolRestoreBtn = document.getElementById('toolRestore');
+const imageLoader = document.getElementById('imageLoader');
+const mainCanvas = document.getElementById('mainCanvas');
+const uiCanvas = document.getElementById('uiCanvas');
+const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+const uiCtx = uiCanvas.getContext('2d');
+const canvasStack = document.getElementById('canvasStack');
+const emptyState = document.getElementById('emptyState');
+const statusMsg = document.getElementById('statusMsg');
+const coordDisplay = document.getElementById('coordDisplay');
+const toolEraserBtn = document.getElementById('toolEraser');
+const toolRestoreBtn = document.getElementById('toolRestore');
 
-        const inputs = { size: document.getElementById('brushSize'), hardness: document.getElementById('brushHardness') };
-        const displays = { size: document.getElementById('sizeVal'), hardness: document.getElementById('hardnessVal') };
-        
-        let state = { isDrawing: false, tool: 'eraser', brushSize: 50, hardness: 0.8, history: [], maxHistory: 20 };
-        const brushCanvas = document.createElement('canvas');
-        const brushCtx = brushCanvas.getContext('2d');
-        const originalCanvas = document.createElement('canvas');
-        const originalCtx = originalCanvas.getContext('2d');
+// UI Elements for sliders
+const brushSizeInput = document.getElementById('brushSize');
+const brushSizeDisplay = document.getElementById('sizeVal');
+const brushHardnessInput = document.getElementById('brushHardness');
+const brushHardnessDisplay = document.getElementById('hardnessVal');
+const toleranceInput = document.getElementById('tolerance');
+const toleranceDisplay = document.getElementById('toleranceVal');
 
-        function init() {
-            inputs.size.addEventListener('input', (e) => { state.brushSize = parseInt(e.target.value); displays.size.textContent = state.brushSize + 'px'; updateBrushTip(); requestAnimationFrame(drawUI); });
-            inputs.hardness.addEventListener('input', (e) => { state.hardness = parseInt(e.target.value) / 100; displays.hardness.textContent = Math.round(state.hardness * 100) + '%'; updateBrushTip(); });
-            toolEraserBtn.addEventListener('click', () => setTool('eraser'));
-            toolRestoreBtn.addEventListener('click', () => setTool('restore'));
-            mainCanvas.addEventListener('mousedown', handleMouseDown);
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', () => state.isDrawing = false);
-            imageLoader.addEventListener('change', handleImageSelection);
-            document.getElementById('undoBtn').addEventListener('click', undo);
-            document.getElementById('downloadBtn').addEventListener('click', downloadImage);
-            document.getElementById('btnRemoveColor').addEventListener('click', applyMagicWand);
-            updateButtons();
-        }
+let state = { isDrawing: false, tool: 'eraser', brushSize: 50, hardness: 0.8, history: [], maxHistory: 20 };
+const brushCanvas = document.createElement('canvas');
+const brushCtx = brushCanvas.getContext('2d');
+const originalCanvas = document.createElement('canvas');
+const originalCtx = originalCanvas.getContext('2d');
+
+function init() {
+    // Brush Size Listener
+    brushSizeInput.addEventListener('input', (e) => {
+        state.brushSize = parseInt(e.target.value);
+        brushSizeDisplay.textContent = state.brushSize + 'px';
+        updateBrushTip();
+        requestAnimationFrame(drawUI);
+    });
+
+    // Brush Hardness Listener
+    brushHardnessInput.addEventListener('input', (e) => {
+        state.hardness = parseInt(e.target.value) / 100;
+        brushHardnessDisplay.textContent = Math.round(state.hardness * 100) + '%';
+        updateBrushTip();
+    });
+
+    // NEW: Tolerance Slider Listener
+    toleranceInput.addEventListener('input', (e) => {
+        toleranceDisplay.textContent = e.target.value + '%';
+    });
+
+    toolEraserBtn.addEventListener('click', () => setTool('eraser'));
+    toolRestoreBtn.addEventListener('click', () => setTool('restore'));
+    mainCanvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', (e) => {
+        const pos = getMousePos(e);
+        coordDisplay.textContent = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
+        drawUI(pos);
+        if (state.isDrawing) paint(pos);
+    });
+    window.addEventListener('mouseup', () => state.isDrawing = false);
+    imageLoader.addEventListener('change', handleImageSelection);
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+    document.getElementById('btnRemoveColor').addEventListener('click', applyMagicWand);
+    updateButtons();
+}
+
+
 
         function handleImageSelection(e) {
             const reader = new FileReader();
