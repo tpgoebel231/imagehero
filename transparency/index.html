@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageHero PNG Transparency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #e5e5e5;
+            overflow: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #2d2d2d; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px;
+            border-radius: 50%; background: #ef4444; cursor: pointer; margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px;
+        }
+        
+        /* Specific slider colors for Restore tool */
+        .restore-slider::-webkit-slider-thumb { background: #10b981; }
+        .magic-slider::-webkit-slider-thumb { background: #a855f7; }
+
+        /* Checkerboard for Transparency */
+        .checkerboard {
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(45deg, #cccccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #cccccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #cccccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #cccccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #uiCanvas { cursor: none; }
+        
+        .tool-btn.active {
+            background-color: #374151;
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body class="flex h-screen w-screen text-sm select-none">
+
+    <!-- Left Sidebar -->
+    <div class="w-72 bg-gray-900 border-r border-gray-800 flex flex-col shadow-xl z-20">
+        <div class="p-4 border-b border-gray-800 bg-gray-900">
+            <h1 class="text-xl font-bold text-gray-200 flex items-center gap-2">
+                <i class="fa-solid fa-eraser text-red-500"></i> ImageHero PNG Transparency Tool
+            </h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-6">
+            
+            <!-- Upload -->
+            <div class="space-y-2">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Image Source</label>
+                <label class="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-red-500 hover:bg-gray-800 transition group">
+                    <div class="text-center">
+                        <i class="fa-solid fa-image text-xl text-gray-500 group-hover:text-red-400 mb-1"></i>
+                        <p class="text-xs text-gray-400">Upload Image</p>
+                    </div>
+                    <input type="file" id="imageLoader" class="hidden" accept="image/*"/>
+                </label>
+            </div>
+
+            <!-- Mode Selection -->
+            <div class="space-y-2">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Tool Mode</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="toolEraser" class="tool-btn active flex flex-col items-center justify-center p-3 rounded border border-gray-700 hover:bg-gray-800 transition">
+                        <i class="fa-solid fa-eraser text-xl mb-1"></i>
+                        <span>Eraser</span>
+                    </button>
+                    <button id="toolRestore" class="tool-btn flex flex-col items-center justify-center p-3 rounded border border-gray-700 hover:bg-gray-800 transition">
+                        <i class="fa-solid fa-brush text-xl mb-1"></i>
+                        <span>Restore</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Magic Wand / Color Remove -->
+            <div class="space-y-4 pt-4 border-t border-gray-800">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Remove Color</label>
+                
+                <div class="flex items-center gap-3 bg-gray-800 p-2 rounded border border-gray-700">
+                    <input type="color" id="magicColor" value="#ffffff" class="h-8 w-8 rounded cursor-pointer border-0 bg-transparent p-0" title="Choose color to remove">
+                    <div class="flex-1 text-xs text-gray-400 ml-2">
+                        Target Color
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Tolerance</span>
+                        <span id="toleranceVal" class="text-purple-400">20%</span>
+                    </div>
+                    <input type="range" id="tolerance" min="1" max="100" value="20" class="w-full magic-slider">
+                </div>
+
+                <button id="btnRemoveColor" class="w-full py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 border border-purple-800 rounded transition text-xs font-semibold uppercase tracking-wide flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Remove Area
+                </button>
+            </div>
+
+            <!-- Brush Settings -->
+            <div class="space-y-4 pt-4 border-t border-gray-800">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Brush Settings</label>
+
+                <!-- Size -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Size</span>
+                        <span id="sizeVal" class="text-red-400">50px</span>
+                    </div>
+                    <input type="range" id="brushSize" min="5" max="300" value="50" class="w-full">
+                </div>
+
+                <!-- Hardness -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Hardness</span>
+                        <span id="hardnessVal" class="text-red-400">80%</span>
+                    </div>
+                    <input type="range" id="brushHardness" min="0" max="100" value="80" class="w-full">
+                </div>
+
+                <!-- Opacity -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Opacity</span>
+                        <span id="opacityVal" class="text-red-400">100%</span>
+                    </div>
+                    <input type="range" id="brushOpacity" min="10" max="100" value="100" class="w-full">
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-gray-800 rounded p-3 text-xs text-gray-400 border border-gray-700 leading-relaxed">
+                <p class="mb-2"><strong class="text-gray-200">Tips:</strong></p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Use <strong>Eraser</strong> to make background transparent.</li>
+                    <li>Use <strong>Restore</strong> to paint the original image back.</li>
+                    <li>Lower hardness for soft edges (good for hair/fur).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-800 bg-gray-900 space-y-3">
+            <button id="undoBtn" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50">
+                <i class="fa-solid fa-rotate-left"></i> Undo
+            </button>
+            <button id="downloadBtn" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-semibold rounded shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50">
+                <i class="fa-solid fa-download"></i> Save PNG
+            </button>
+        </div>
+    </div>
+
+    <!-- Workspace -->
+    <div class="flex-1 flex flex-col bg-gray-800 overflow-hidden relative">
+        <div class="h-10 bg-gray-900 border-b border-gray-800 flex items-center px-4 justify-between text-xs text-gray-400">
+            <span id="statusMsg">Ready</span>
+            <span id="coordDisplay">X: 0 Y: 0</span>
+        </div>
+
+        <div class="flex-1 relative overflow-auto flex items-center justify-center bg-gray-800 p-10" id="canvasWrapper">
+            <!-- Canvas Stack -->
+            <div class="relative shadow-2xl checkerboard" id="canvasStack" style="display:none;">
+                <canvas id="mainCanvas" class="block bg-transparent"></canvas>
+                <canvas id="uiCanvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
+            </div>
+            
+            <div id="emptyState" class="text-center">
+                <div class="inline-block p-6 rounded-full bg-gray-700 mb-4 text-gray-500">
+                    <i class="fa-solid fa-file-image text-4xl"></i>
+                </div>
+                <h3 class="text-xl text-gray-300 font-medium">No Image Loaded</h3>
+                <p class="text-gray-500 mt-2">Upload an image to start removing background.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Setup ---
+        const imageLoader = document.getElementById('imageLoader');
+        const mainCanvas = document.getElementById('mainCanvas');
+        const uiCanvas = document.getElementById('uiCanvas');
+        const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+        const uiCtx = uiCanvas.getContext('2d');
+        const canvasStack = document.getElementById('canvasStack');
+        const emptyState = document.getElementById('emptyState');
+        const statusMsg = document.getElementById('statusMsg');
+        const coordDisplay = document.getElementById('coordDisplay');
+        const toolEraserBtn = document.getElementById('toolEraser');
+        const toolRestoreBtn = document.getElementById('toolRestore');
+
+        // Inputs
+        const inputs = {
+            size: document.getElementById('brushSize'),
+            hardness: document.getElementById('brushHardness'),
+            opacity: document.getElementById('brushOpacity')
+        };
+        const displays = {
+            size: document.getElementById('sizeVal'),
+            hardness: document.getElementById('hardnessVal'),
+            opacity: document.getElementById('opacityVal')
+        };
+        
+        // State
+        let state = {
+            isDrawing: false,
+            tool: 'eraser', // 'eraser' or 'restore'
+            brushSize: 50,
+            hardness: 0.8,
+            opacity: 1.0,
+            history: [],
+            maxHistory: 20
+        };
+
+        // Offscreen canvases
+        const brushCanvas = document.createElement('canvas'); // For brush shape
+        const brushCtx = brushCanvas.getContext('2d');
+        const originalCanvas = document.createElement('canvas'); // Keeps original image
+        const originalCtx = originalCanvas.getContext('2d');
+
+        function init() {
+            // Sliders
+            inputs.size.addEventListener('input', (e) => {
+                state.brushSize = parseInt(e.target.value);
+                displays.size.textContent = state.brushSize + 'px';
+                updateBrushTip();
+                requestAnimationFrame(drawUI);
+            });
+            inputs.hardness.addEventListener('input', (e) => {
+                state.hardness = parseInt(e.target.value) / 100;
+                displays.hardness.textContent = Math.round(state.hardness * 100) + '%';
+                updateBrushTip();
+            });
+            inputs.opacity.addEventListener('input', (e) => {
+                state.opacity = parseInt(e.target.value) / 100;
+                displays.opacity.textContent = Math.round(state.opacity * 100) + '%';
+            });
+
+            // Tools
+            toolEraserBtn.addEventListener('click', () => setTool('eraser'));
+            toolRestoreBtn.addEventListener('click', () => setTool('restore'));
+
+            // Canvas Interaction
+            mainCanvas.addEventListener('mousedown', handleMouseDown);
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            mainCanvas.addEventListener('mouseenter', () => { uiCanvas.style.display = 'block'; });
+            mainCanvas.addEventListener('mouseout', () => { if(!state.isDrawing) uiCanvas.style.display = 'none'; });
+
+            // File & Actions
+            imageLoader.addEventListener('change', handleImageUpload);
+            document.getElementById('undoBtn').addEventListener('click', undo);
+            document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+            
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') undo();
+            });
+
+            // Magic Wand Init
+            const tolSlider = document.getElementById('tolerance');
+            const tolVal = document.getElementById('toleranceVal');
+            tolSlider.addEventListener('input', (e) => {
+                tolVal.textContent = e.target.value + '%';
+            });
+            document.getElementById('btnRemoveColor').addEventListener('click', removeColor);
+
+            updateButtons();
+        }
+
+        function removeColor() {
+            if (!mainCanvas.width) return;
+            saveHistory();
+
+            const hex = document.getElementById('magicColor').value;
+            const tolerance = parseInt(document.getElementById('tolerance').value);
+            
+            // Hex to RGB
+            const rTarget = parseInt(hex.slice(1, 3), 16);
+            const gTarget = parseInt(hex.slice(3, 5), 16);
+            const bTarget = parseInt(hex.slice(5, 7), 16);
+
+            const imgData = ctx.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
+            const data = imgData.data;
+            
+            // Max Euclidean distance in RGB is sqrt(255^2 * 3) approx 441.6
+            const maxDist = 442;
+            const threshold = (tolerance / 100) * maxDist;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Skip if already fully transparent
+                if (data[i+3] === 0) continue;
+
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+
+                const dist = Math.sqrt(
+                    Math.pow(r - rTarget, 2) + 
+                    Math.pow(g - gTarget, 2) + 
+                    Math.pow(b - bTarget, 2)
+                );
+
+                if (dist <= threshold) {
+                    data[i+3] = 0;
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function setTool(toolName) {
+            state.tool = toolName;
+            
+            // Update UI styles
+            if(toolName === 'eraser') {
+                toolEraserBtn.classList.add('active');
+                toolRestoreBtn.classList.remove('active');
+                updateSliderColors('red');
+            } else {
+                toolRestoreBtn.classList.add('active');
+                toolEraserBtn.classList.remove('active');
+                updateSliderColors('green');
+            }
+            drawUI();
+        }
+
+        function updateSliderColors(colorName) {
+            const colorMap = { 'red': '#ef4444', 'green': '#10b981' };
+            const ranges = document.querySelectorAll('input[type=range]');
+            ranges.forEach(r => {
+                if(colorName === 'green') r.classList.add('restore-slider');
+                else r.classList.remove('restore-slider');
+            });
+            // Update text colors
+            Object.values(displays).forEach(d => {
+                d.className = colorName === 'red' ? 'text-red-400' : 'text-green-400';
+            });
+        }
+
+        // --- Image Loading ---
+
+        function handleImageUpload(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Set dimensions
+                    mainCanvas.width = img.width;
+                    mainCanvas.height = img.height;
+                    uiCanvas.width = img.width;
+                    uiCanvas.height = img.height;
+                    originalCanvas.width = img.width;
+                    originalCanvas.height = img.height;
+
+                    // Draw to Main
+                    ctx.clearRect(0,0, mainCanvas.width, mainCanvas.height);
+                    ctx.drawImage(img, 0, 0);
+
+                    // Keep copy in Original
+                    originalCtx.drawImage(img, 0, 0);
+                    
+                    canvasStack.style.display = 'block';
+                    emptyState.style.display = 'none';
+                    state.history = [];
+                    saveHistory();
+                    updateBrushTip();
+                }
+                img.src = event.target.result;
+            }
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+
+        // --- Drawing Logic ---
+
+        function updateBrushTip() {
+            const size = state.brushSize;
+            const r = size / 2;
+            brushCanvas.width = size;
+            brushCanvas.height = size;
+            
+            const hardness = Math.max(0.01, state.hardness);
+            const grad = brushCtx.createRadialGradient(r, r, r * hardness, r, r, r);
+            
+            // For Eraser/Masking: black = opaque in mask logic
+            grad.addColorStop(0, 'rgba(0,0,0,1)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            brushCtx.fillStyle = grad;
+            brushCtx.beginPath();
+            brushCtx.arc(r, r, r, 0, Math.PI * 2);
+            brushCtx.fill();
+        }
+
+        let lastPoint = null;
+
+        function getMousePos(evt) {
+            const rect = mainCanvas.getBoundingClientRect();
+            const scaleX = mainCanvas.width / rect.width;
+            const scaleY = mainCanvas.height / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleMouseDown(e) {
+            if (!mainCanvas.width) return;
+            state.isDrawing = true;
+            saveHistory();
+            const pos = getMousePos(e);
+            lastPoint = pos;
+            paint(pos);
+        }
+
+        function handleMouseMove(e) {
+            if (!mainCanvas.width) return;
+            const pos = getMousePos(e);
+            coordDisplay.textContent = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
+            
+            // Draw Cursor
+            if (e.target === mainCanvas || state.isDrawing) {
+                requestAnimationFrame(() => drawUI(pos));
+            }
+
+            if (state.isDrawing) {
+                const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
+                const step = Math.max(1, state.brushSize * 0.1);
+                
+                if (dist > step) {
+                    const angle = Math.atan2(pos.y - lastPoint.y, pos.x - lastPoint.x);
+                    for (let i = 0; i < dist; i += step) {
+                        paint({
+                            x: lastPoint.x + Math.cos(angle) * i,
+                            y: lastPoint.y + Math.sin(angle) * i
+                        });
+                    }
+                }
+                paint(pos);
+                lastPoint = pos;
+            }
+        }
+
+        function handleMouseUp() {
+            state.isDrawing = false;
+        }
+
+        function paint(pos) {
+            const r = state.brushSize / 2;
+            const x = pos.x - r;
+            const y = pos.y - r;
+            
+            // Common setup
+            ctx.globalAlpha = state.opacity;
+
+            if (state.tool === 'eraser') {
+                // Eraser Logic:
+                // We want to remove pixels using the brush gradient (Softness).
+                // "destination-out" removes existing pixels where new shape overlaps.
+                // The Alpha of the source (brush) determines how much is removed.
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.drawImage(brushCanvas, x, y);
+            } else {
+                // Restore Logic:
+                // We want to put pixels BACK from the original image.
+                // 1. Create a scratch canvas for this brush stamp
+                const scratch = document.createElement('canvas');
+                scratch.width = state.brushSize;
+                scratch.height = state.brushSize;
+                const sCtx = scratch.getContext('2d');
+
+                // 2. Draw brush gradient (alpha mask)
+                sCtx.drawImage(brushCanvas, 0, 0);
+
+                // 3. Composite the Original Image onto the mask ('source-in')
+                // This keeps original pixels only where the brush is opaque
+                sCtx.globalCompositeOperation = 'source-in';
+                sCtx.drawImage(originalCanvas, x, y, state.brushSize, state.brushSize, 0, 0, state.brushSize, state.brushSize);
+
+                // 4. Draw scratch onto main canvas
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.drawImage(scratch, x, y);
+            }
+
+            // Reset
+            ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // --- UI Rendering ---
+
+        let lastMousePos = {x:0, y:0};
+
+        function drawUI(mousePos) {
+            if (mousePos) lastMousePos = mousePos; else mousePos = lastMousePos;
+            
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            const r = state.brushSize / 2;
+            const color = state.tool === 'eraser' ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)';
+
+            // Brush outline
+            uiCtx.beginPath();
+            uiCtx.arc(mousePos.x, mousePos.y, r, 0, Math.PI * 2);
+            uiCtx.strokeStyle = color;
+            uiCtx.lineWidth = 1;
+            uiCtx.stroke();
+            
+            // Outer shadow for visibility
+            uiCtx.beginPath();
+            uiCtx.arc(mousePos.x, mousePos.y, r, 0, Math.PI * 2);
+            uiCtx.strokeStyle = 'rgba(0,0,0,0.3)';
+            uiCtx.lineWidth = 2;
+            uiCtx.stroke();
+
+            // Center cross
+            uiCtx.beginPath();
+            uiCtx.moveTo(mousePos.x - 3, mousePos.y);
+            uiCtx.lineTo(mousePos.x + 3, mousePos.y);
+            uiCtx.moveTo(mousePos.x, mousePos.y - 3);
+            uiCtx.lineTo(mousePos.x, mousePos.y + 3);
+            uiCtx.strokeStyle = color;
+            uiCtx.stroke();
+        }
+
+        // --- History & Actions ---
+
+        function saveHistory() {
+            if (state.history.length > state.maxHistory) state.history.shift();
+            state.history.push(mainCanvas.toDataURL());
+            updateButtons();
+        }
+
+        function undo() {
+            if (state.history.length > 0) {
+                const prevData = state.history.pop();
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0,0, mainCanvas.width, mainCanvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = prevData;
+                updateButtons();
+            }
+        }
+
+        function updateButtons() {
+            const undoBtn = document.getElementById('undoBtn');
+            const downBtn = document.getElementById('downloadBtn');
+            undoBtn.disabled = state.history.length === 0;
+            downBtn.disabled = !mainCanvas.width && state.history.length === 0;
+        }
+
+        function downloadImage() {
+            if (!mainCanvas.width) return;
+            const link = document.createElement('a');
+            link.download = 'transparent-image.png';
+            link.href = mainCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
