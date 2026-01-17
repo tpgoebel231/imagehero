@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageHero - Clone Stamp Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #e5e5e5;
+            overflow: hidden; /* Prevent body scroll, handle in canvas container */
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777; 
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -6px; 
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #4b5563;
+            border-radius: 2px;
+        }
+
+        .canvas-container {
+            background-image: 
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            box-shadow: inset 0 0 20px #000;
+        }
+
+        /* Hide cursor over canvas because we draw a custom one */
+        #uiCanvas {
+            cursor: none;
+        }
+    </style>
+</head>
+<body class="flex h-screen w-screen text-sm select-none">
+
+    <!-- Left Sidebar: Tools -->
+    <div class="w-72 bg-gray-900 border-r border-gray-800 flex flex-col shadow-xl z-20">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-800 bg-gray-900">
+            <h1 class="text-xl font-bold text-blue-400 flex items-center gap-2">
+                <i class="fa-solid fa-stamp"></i> ImageHero Clone Stamp
+            </h1>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex-1 overflow-y-auto p-5 space-y-6">
+            
+            <!-- Upload -->
+            <div class="space-y-2">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Image Source</label>
+                <label class="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-gray-800 transition group">
+                    <div class="text-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-500 group-hover:text-blue-400 mb-2"></i>
+                        <p class="text-xs text-gray-400">Click to Upload</p>
+                    </div>
+                    <input type="file" id="imageLoader" class="hidden" accept="image/*"/>
+                </label>
+            </div>
+
+            <!-- Brush Settings -->
+            <div class="space-y-4 pt-4 border-t border-gray-800">
+                <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Brush Settings</label>
+
+                <!-- Size -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Size</span>
+                        <span id="sizeVal" class="text-blue-400">50px</span>
+                    </div>
+                    <input type="range" id="brushSize" min="5" max="300" value="50" class="w-full">
+                </div>
+
+                <!-- Hardness -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Hardness</span>
+                        <span id="hardnessVal" class="text-blue-400">50%</span>
+                    </div>
+                    <input type="range" id="brushHardness" min="0" max="100" value="50" class="w-full">
+                </div>
+
+                <!-- Opacity -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-gray-300">
+                        <span>Opacity</span>
+                        <span id="opacityVal" class="text-blue-400">100%</span>
+                    </div>
+                    <input type="range" id="brushOpacity" min="10" max="100" value="100" class="w-full">
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-gray-800 rounded p-3 text-xs text-gray-400 border border-gray-700 leading-relaxed">
+                <p class="mb-2"><strong class="text-gray-200">How to use:</strong></p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Upload an image.</li>
+                    <li>Hold <kbd class="bg-gray-700 px-1 rounded text-gray-200 font-mono">Alt</kbd> + Click to set the source area.</li>
+                    <li>Release Alt and drag over the watermark to clone pixels.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-4 border-t border-gray-800 bg-gray-900 space-y-3">
+            <button id="undoBtn" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-rotate-left"></i> Undo
+            </button>
+            <button id="downloadBtn" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-download"></i> Download
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col bg-gray-800 overflow-hidden relative">
+        <!-- Toolbar / Info Bar -->
+        <div class="h-10 bg-gray-900 border-b border-gray-800 flex items-center px-4 justify-between text-xs text-gray-400">
+            <span id="statusMsg">Waiting for image...</span>
+            <span id="coordDisplay">X: 0 Y: 0</span>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="flex-1 relative overflow-auto flex items-center justify-center canvas-container p-10" id="canvasWrapper">
+            <!-- Container for stacked canvases -->
+            <div class="relative shadow-2xl" id="canvasStack" style="display:none;">
+                <canvas id="mainCanvas" class="block bg-transparent"></canvas>
+                <canvas id="uiCanvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center">
+                <div class="inline-block p-6 rounded-full bg-gray-700 mb-4 text-gray-500">
+                    <i class="fa-regular fa-image text-4xl"></i>
+                </div>
+                <h3 class="text-xl text-gray-300 font-medium">No Image Loaded</h3>
+                <p class="text-gray-500 mt-2">Upload an image from the sidebar to start editing.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const imageLoader = document.getElementById('imageLoader');
+        const mainCanvas = document.getElementById('mainCanvas');
+        const uiCanvas = document.getElementById('uiCanvas');
+        const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+        const uiCtx = uiCanvas.getContext('2d');
+        const canvasStack = document.getElementById('canvasStack');
+        const emptyState = document.getElementById('emptyState');
+        const statusMsg = document.getElementById('statusMsg');
+        const coordDisplay = document.getElementById('coordDisplay');
+
+        // Controls
+        const inputs = {
+            size: document.getElementById('brushSize'),
+            hardness: document.getElementById('brushHardness'),
+            opacity: document.getElementById('brushOpacity')
+        };
+        const displays = {
+            size: document.getElementById('sizeVal'),
+            hardness: document.getElementById('hardnessVal'),
+            opacity: document.getElementById('opacityVal')
+        };
+        const undoBtn = document.getElementById('undoBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // --- State ---
+        let state = {
+            isDrawing: false,
+            isAltPressed: false,
+            sourcePoint: null, // {x, y}
+            brushSize: 50,
+            hardness: 0.5, // 0 to 1
+            opacity: 1.0,  // 0 to 1
+            history: [],
+            historyStep: -1,
+            maxHistory: 20
+        };
+
+        // Offscreen canvas for efficient brush rendering
+        const brushCanvas = document.createElement('canvas');
+        const brushCtx = brushCanvas.getContext('2d');
+
+        // --- Initialization ---
+
+        function init() {
+            // Bind Slider Events
+            inputs.size.addEventListener('input', (e) => {
+                state.brushSize = parseInt(e.target.value);
+                displays.size.textContent = state.brushSize + 'px';
+                updateBrushTip();
+                requestAnimationFrame(drawUI);
+            });
+            inputs.hardness.addEventListener('input', (e) => {
+                state.hardness = parseInt(e.target.value) / 100;
+                displays.hardness.textContent = Math.round(state.hardness * 100) + '%';
+                updateBrushTip();
+            });
+            inputs.opacity.addEventListener('input', (e) => {
+                state.opacity = parseInt(e.target.value) / 100;
+                displays.opacity.textContent = Math.round(state.opacity * 100) + '%';
+            });
+
+            // Keyboard Events
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Alt') {
+                    state.isAltPressed = true;
+                    document.body.style.cursor = 'crosshair';
+                    statusMsg.textContent = 'Click to set source point';
+                    statusMsg.classList.add('text-blue-400');
+                    requestAnimationFrame(drawUI);
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'Alt') {
+                    state.isAltPressed = false;
+                    document.body.style.cursor = 'default';
+                    statusMsg.textContent = state.sourcePoint ? 'Ready to clone' : 'Alt+Click to set source';
+                    statusMsg.classList.remove('text-blue-400');
+                    requestAnimationFrame(drawUI);
+                }
+                // Ctrl+Z
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    undo();
+                }
+            });
+
+            // Canvas Mouse Events
+            // Attach to uiCanvas to capture events but use coordinates relative to it
+            // Actually, we must attach listeners to the wrapper or top canvas since it covers the bottom one
+            // We use uiCanvas (pointer-events-none) strictly for drawing. 
+            // So we attach events to mainCanvas? No, mainCanvas is below UI.
+            // The structure is: Wrapper -> [Main] -> [UI]. 
+            // Wait, standard overlay: UI canvas should be pointer-events-none to let Main receive events?
+            // OR UI canvas receives events and we map them.
+            // In CSS above: #uiCanvas { pointer-events: none; }
+            // So events go to #mainCanvas.
+            
+            mainCanvas.addEventListener('mousedown', handleMouseDown);
+            window.addEventListener('mousemove', handleMouseMove); // Window to catch drag outside
+            window.addEventListener('mouseup', handleMouseUp);
+            
+            mainCanvas.addEventListener('mouseenter', () => { uiCanvas.style.display = 'block'; });
+            mainCanvas.addEventListener('mouseout', () => { 
+                // Only hide if not drawing
+                if(!state.isDrawing) uiCanvas.style.display = 'none'; 
+            });
+
+            // Image Loader
+            imageLoader.addEventListener('change', handleImageUpload);
+            
+            // Buttons
+            undoBtn.addEventListener('click', undo);
+            downloadBtn.addEventListener('click', downloadImage);
+
+            updateButtons();
+        }
+
+        // --- Image Handling ---
+
+        function handleImageUpload(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Resize canvases
+                    mainCanvas.width = img.width;
+                    mainCanvas.height = img.height;
+                    uiCanvas.width = img.width;
+                    uiCanvas.height = img.height;
+                    
+                    // Draw initial image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Show canvas, hide empty state
+                    canvasStack.style.display = 'block';
+                    emptyState.style.display = 'none';
+                    
+                    // Reset State
+                    state.sourcePoint = null;
+                    state.history = [];
+                    saveHistory();
+                    statusMsg.textContent = 'Alt+Click to set source';
+                    
+                    updateBrushTip();
+                }
+                img.src = event.target.result;
+            }
+            if(e.target.files[0]) {
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        }
+
+        // --- Drawing Logic ---
+
+        // Pre-render the brush alpha mask to improve performance
+        function updateBrushTip() {
+            const size = state.brushSize;
+            const r = size / 2;
+            brushCanvas.width = size;
+            brushCanvas.height = size;
+            
+            // Clear
+            brushCtx.clearRect(0, 0, size, size);
+            
+            // Create gradient for hardness
+            // Hardness 1 = solid edge. Hardness 0 = soft gradient from center.
+            const hardness = Math.max(0.01, state.hardness); // avoid 0 division
+            
+            // Gradient:
+            // The solid part extends to radius * hardness
+            // The fade out goes from radius * hardness to radius
+            
+            const grad = brushCtx.createRadialGradient(r, r, r * hardness, r, r, r);
+            grad.addColorStop(0, 'rgba(0,0,0,1)'); // Core is opaque (black for mask)
+            grad.addColorStop(1, 'rgba(0,0,0,0)'); // Edge is transparent
+            
+            brushCtx.fillStyle = grad;
+            brushCtx.beginPath();
+            brushCtx.arc(r, r, r, 0, Math.PI * 2);
+            brushCtx.fill();
+        }
+
+        let lastPoint = null;
+        let cloneOffset = {x:0, y:0};
+
+        function getMousePos(evt) {
+            const rect = mainCanvas.getBoundingClientRect();
+            const scaleX = mainCanvas.width / rect.width;
+            const scaleY = mainCanvas.height / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleMouseDown(e) {
+            if (!mainCanvas.width) return; // No image loaded
+            const pos = getMousePos(e);
+
+            if (state.isAltPressed) {
+                // Set Source
+                state.sourcePoint = { x: pos.x, y: pos.y };
+                statusMsg.textContent = 'Source set. Click and drag to clone.';
+                requestAnimationFrame(drawUI);
+            } else {
+                // Start Painting
+                if (!state.sourcePoint) {
+                    alert("Please hold Alt and click to select a source area first.");
+                    return;
+                }
+
+                saveHistory(); // Save state before drawing
+                state.isDrawing = true;
+                lastPoint = pos;
+                
+                // Calculate offset: Source - Current
+                // Standard clone stamp behavior: 
+                // Source is the anchor. 
+                // When we paint at Current(x,y), we copy from Source + (Current - Start)
+                // Wait, simpler: We calculate the fixed vector between Source and Start.
+                // Vector = Source - Start.
+                // For any point P, CopyFrom = P + Vector.
+                
+                cloneOffset = {
+                    x: state.sourcePoint.x - pos.x,
+                    y: state.sourcePoint.y - pos.y
+                };
+                
+                paint(pos);
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!mainCanvas.width) return;
+            // Check if target is canvas or if we are dragging
+            if (e.target !== mainCanvas && !state.isDrawing) {
+                // If mouse is outside canvas and not drawing, don't update UI extensively
+                // maybe just hide cursor
+                return; 
+            }
+
+            const pos = getMousePos(e);
+            
+            // Update UI cursor position
+            requestAnimationFrame(() => drawUI(pos));
+            
+            coordDisplay.textContent = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
+
+            if (state.isDrawing) {
+                // Interpolate for smoother strokes (Bresenham-like or simple distance check)
+                const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
+                const step = Math.max(1, state.brushSize * 0.1); // Step every 10% of brush size
+                
+                if (dist > step) {
+                    const angle = Math.atan2(pos.y - lastPoint.y, pos.x - lastPoint.x);
+                    for (let i = 0; i < dist; i += step) {
+                        const interpX = lastPoint.x + Math.cos(angle) * i;
+                        const interpY = lastPoint.y + Math.sin(angle) * i;
+                        paint({x: interpX, y: interpY});
+                    }
+                }
+                
+                paint(pos);
+                lastPoint = pos;
+            }
+        }
+
+        function handleMouseUp() {
+            if (state.isDrawing) {
+                state.isDrawing = false;
+            }
+        }
+
+        function paint(destPos) {
+            const size = state.brushSize;
+            const r = size / 2;
+            
+            // Determine source position based on offset
+            const srcX = destPos.x + cloneOffset.x;
+            const srcY = destPos.y + cloneOffset.y;
+
+            // Performance:
+            // 1. Create a small temp canvas for this stamp
+            // 2. Draw the Source Image chunk onto temp
+            // 3. Composite the Brush Tip Alpha onto temp (destination-in)
+            // 4. Draw temp to Main Canvas
+            
+            // To avoid creating canvas every frame, reuse a global temp canvas?
+            // Actually, we can use the pre-rendered brushCanvas, but we need to put the image INSIDE it.
+            // Better: 
+            // 1. Draw BrushTip (black gradient) to a cleared scratch canvas.
+            // 2. Change composite mode to 'source-in'.
+            // 3. Draw Source Image (offset correctly) onto scratch canvas.
+            //    (Only pixels overlapping the gradient remain, retaining alpha).
+            // 4. Draw scratch canvas to main canvas with opacity.
+
+            const scratch = document.createElement('canvas'); // Creating new ensures no artifacts, but slower. 
+            // Optimization: Use a shared scratch canvas
+            scratch.width = size;
+            scratch.height = size;
+            const sCtx = scratch.getContext('2d');
+
+            // 1. Draw Alpha Mask
+            sCtx.drawImage(brushCanvas, 0, 0);
+
+            // 2. Composite Source Image
+            sCtx.globalCompositeOperation = 'source-in';
+            sCtx.drawImage(mainCanvas, 
+                srcX - r, srcY - r, size, size, // Source rect
+                0, 0, size, size                // Dest rect on scratch
+            );
+
+            // 3. Apply to Main
+            ctx.globalAlpha = state.opacity;
+            // ctx.globalCompositeOperation = 'source-over'; // Default
+            ctx.drawImage(scratch, destPos.x - r, destPos.y - r);
+            ctx.globalAlpha = 1.0;
+        }
+
+        // --- UI Canvas Rendering ---
+
+        let lastMousePos = {x:0, y:0};
+
+        function drawUI(mousePos) {
+            if (mousePos) lastMousePos = mousePos;
+            else mousePos = lastMousePos;
+
+            // Clear UI Canvas
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+
+            const r = state.brushSize / 2;
+
+            // 1. Draw Brush Outline at Mouse
+            uiCtx.beginPath();
+            uiCtx.arc(mousePos.x, mousePos.y, r, 0, Math.PI * 2);
+            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            uiCtx.lineWidth = 1;
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.arc(mousePos.x, mousePos.y, r, 0, Math.PI * 2);
+            uiCtx.strokeStyle = 'rgba(0, 0, 0, 0.5)'; // Double stroke for visibility on any bg
+            uiCtx.lineWidth = 2; // Outer slightly thicker to frame white
+            uiCtx.stroke();
+            
+            // 1b. Center cross
+            uiCtx.beginPath();
+            uiCtx.moveTo(mousePos.x - 4, mousePos.y);
+            uiCtx.lineTo(mousePos.x + 4, mousePos.y);
+            uiCtx.moveTo(mousePos.x, mousePos.y - 4);
+            uiCtx.lineTo(mousePos.x, mousePos.y + 4);
+            uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            uiCtx.lineWidth = 1;
+            uiCtx.stroke();
+
+            // 2. Draw Source Point Anchor (if set)
+            if (state.sourcePoint) {
+                const sx = state.sourcePoint.x;
+                const sy = state.sourcePoint.y;
+
+                // Draw static crosshair at original source
+                drawCrosshair(sx, sy, 'rgba(59, 130, 246, 0.8)'); // Blue
+
+                // 3. Draw Dynamic Source Preview (Where we are cloning FROM right now)
+                // If drawing, we know offset. If hovering (and source set), we can predict offset if we started *now*?
+                // Standard Photoshop: Before you click, if source is set, it might show a preview within the brush.
+                // We'll just show the source follower cursor if drawing.
+                
+                if (state.isDrawing) {
+                    const currentSourceX = mousePos.x + cloneOffset.x;
+                    const currentSourceY = mousePos.y + cloneOffset.y;
+                    drawCrosshair(currentSourceX, currentSourceY, 'rgba(59, 130, 246, 0.5)');
+                }
+            }
+        }
+
+        function drawCrosshair(x, y, color) {
+            uiCtx.beginPath();
+            uiCtx.moveTo(x - 10, y);
+            uiCtx.lineTo(x + 10, y);
+            uiCtx.moveTo(x, y - 10);
+            uiCtx.lineTo(x, y + 10);
+            uiCtx.strokeStyle = color;
+            uiCtx.lineWidth = 2;
+            uiCtx.stroke();
+        }
+
+        // --- History & Actions ---
+
+        function saveHistory() {
+            // Limit stack
+            if (state.history.length > state.maxHistory) {
+                state.history.shift();
+            }
+            state.history.push(mainCanvas.toDataURL());
+            updateButtons();
+        }
+
+        function undo() {
+            if (state.history.length > 0) {
+                const prevData = state.history.pop();
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0,0, mainCanvas.width, mainCanvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = prevData;
+                updateButtons();
+            }
+        }
+
+        function updateButtons() {
+            undoBtn.disabled = state.history.length === 0;
+            downloadBtn.disabled = !state.sourcePoint && state.history.length === 0; // Basic check
+        }
+
+        function downloadImage() {
+            if (!mainCanvas.width) return;
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = mainCanvas.toDataURL();
+            link.click();
+        }
+
+        // Run
+        init();
+
+    </script>
+</body>
+</html>
