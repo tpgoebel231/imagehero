@@ -4,88 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ImageHero | Precision Clone Stamp</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        body { background-color: #1a1a1a; color: #e5e5e5; overflow: hidden; }
+        /* TeslaTobi Brand Palette */
+        :root {
+            --tt-red: #A11D20;
+            --tt-yellow: #DDBB38;
+            --tt-gray: #2C2C2C;
+            --tt-dark: #1f1f1f; 
+            --tt-blue: #38b6ff; 
+        }
+
+        body { background-color: var(--tt-dark); color: #e5e5e5; overflow: hidden; }
+        
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #2d2d2d; }
+        ::-webkit-scrollbar-track { background: var(--tt-gray); }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        /* Slider Styling - Uses Brand Yellow for Clone Tool */
         input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 16px; width: 16px; 
+            border-radius: 50%; background: var(--tt-yellow); cursor: pointer; margin-top: -6px; 
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        
+        input[type=range]::-webkit-slider-runnable-track { 
+            width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px; 
+        }
+        
         .canvas-container { 
-            background-image: linear-gradient(45deg, #2a2a2a 25%, transparent 25%), linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2a2a2a 75%), linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
-            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; box-shadow: inset 0 0 20px #000; 
+            background-image: 
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 20px 20px; 
+            box-shadow: inset 0 0 20px #000; 
         }
         #uiCanvas { cursor: none; }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen text-sm select-none">
 
-    <nav class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between shrink-0 z-30">
+    <nav class="bg-[#2C2C2C] border-b border-[#404040] px-6 py-4 flex items-center justify-between shrink-0 z-30">
         <a href="../index.html" class="flex items-center gap-2 text-xl font-bold">
-            <span class="text-blue-400 tracking-tighter">ImageHero</span>
+            <span class="text-[#DDBB38] tracking-tighter font-extrabold">ImageHero</span>
         </a>
-        <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500 items-center">
+        <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400 items-center">
             <a href="../index.html" class="hover:text-white transition">Home</a>
-            <a href="../transparency/index.html" class="hover:text-red-400 transition">Transparency</a>
-            <a href="index.html" class="text-blue-400">Clone Stamp</a>
+            <a href="../transparency/index.html" class="hover:text-[#A11D20] transition">Transparency</a>
+            <a href="index.html" class="text-[#DDBB38]">Clone Stamp</a>
+            <a href="../color-picker/index.html" class="hover:text-[#38b6ff] transition">Color Picker</a>
             <a href="https://x.com/tpgoebel" target="_blank" class="hover:text-white transition text-lg"><i class="fa-brands fa-x-twitter"></i></a>
         </div>
     </nav>
 
     <div class="flex flex-1 overflow-hidden">
         
-        <div class="w-72 bg-gray-900 border-r border-gray-800 flex flex-col shadow-xl z-20">
+        <div class="w-72 bg-[#2C2C2C] border-r border-[#404040] flex flex-col shadow-xl z-20">
             <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                
                 <div class="space-y-2">
                     <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Image Source</label>
-                    <label class="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-gray-800 transition group">
+                    <label class="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-[#DDBB38] hover:bg-[#DDBB38]/10 transition group">
                         <div class="text-center">
-                            <i class="fa-solid fa-folder-open text-2xl text-gray-500 group-hover:text-blue-400 mb-2"></i>
+                            <i class="fa-solid fa-folder-open text-2xl text-gray-500 group-hover:text-[#DDBB38] mb-2"></i>
                             <p class="text-xs text-gray-400">Open Local Image</p>
                         </div>
                         <input type="file" id="imageLoader" class="hidden" accept="image/*"/>
                     </label>
                 </div>
 
-                <div class="space-y-4 pt-4 border-t border-gray-800">
+                <div class="space-y-4 pt-4 border-t border-[#404040]">
                     <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Brush Settings</label>
                     <div class="space-y-1">
-                        <div class="flex justify-between text-gray-300"><span>Size</span><span id="sizeVal" class="text-blue-400">50px</span></div>
+                        <div class="flex justify-between text-gray-300"><span>Size</span><span id="sizeVal" class="text-[#DDBB38]">50px</span></div>
                         <input type="range" id="brushSize" min="5" max="300" value="50" class="w-full">
                     </div>
                     <div class="space-y-1">
-                        <div class="flex justify-between text-gray-300"><span>Hardness</span><span id="hardnessVal" class="text-blue-400">50%</span></div>
+                        <div class="flex justify-between text-gray-300"><span>Hardness</span><span id="hardnessVal" class="text-[#DDBB38]">50%</span></div>
                         <input type="range" id="brushHardness" min="0" max="100" value="50" class="w-full">
                     </div>
                 </div>
 
-                <div class="bg-gray-800 rounded p-3 text-xs text-gray-400 border border-gray-700 leading-relaxed">
+                <div class="bg-[#1f1f1f] rounded p-3 text-xs text-gray-400 border border-[#404040] leading-relaxed">
                     <p class="mb-2"><strong class="text-gray-200">How to use:</strong></p>
                     <ol class="list-decimal list-inside space-y-1">
                         <li>Open a local image.</li>
-                        <li>Hold <kbd class="bg-gray-700 px-1 rounded text-gray-200 font-mono">Alt</kbd> + Click to set source.</li>
+                        <li>Hold <kbd class="bg-[#2C2C2C] px-1 rounded text-[#DDBB38] font-mono border border-gray-600">Alt</kbd> + Click to set source.</li>
                         <li>Drag to clone pixels.</li>
                     </ol>
                 </div>
+                
+                <div class="text-[10px] text-gray-500 text-center">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> Zero-Upload Privacy
+                </div>
             </div>
 
-            <div class="p-4 border-t border-gray-800 bg-gray-900 space-y-3 shrink-0">
-                <button id="undoBtn" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50">
+            <div class="p-4 border-t border-[#404040] bg-[#2C2C2C] space-y-3 shrink-0">
+                <button id="undoBtn" class="w-full py-2 bg-[#1f1f1f] hover:bg-black text-gray-300 rounded border border-gray-600 transition flex items-center justify-center gap-2 disabled:opacity-50">
                     <i class="fa-solid fa-rotate-left"></i> Undo
                 </button>
-                <button id="downloadBtn" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50">
+                <button id="downloadBtn" class="w-full py-2 bg-[#DDBB38] hover:bg-[#c4a530] text-black font-bold rounded shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50">
                     <i class="fa-solid fa-download"></i> Download Result
                 </button>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col bg-gray-800 overflow-hidden relative">
-            <div class="h-10 bg-gray-900 border-b border-gray-800 flex items-center px-4 justify-between text-xs text-gray-400 shrink-0">
+        <div class="flex-1 flex flex-col bg-[#1f1f1f] overflow-hidden relative">
+            <div class="h-10 bg-[#2C2C2C] border-b border-[#404040] flex items-center px-4 justify-between text-xs text-gray-400 shrink-0">
                 <span id="statusMsg">Waiting for image...</span>
                 <span id="coordDisplay">X: 0 Y: 0</span>
             </div>
@@ -95,10 +130,11 @@
                     <canvas id="uiCanvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
                 </div>
                 <div id="emptyState" class="text-center">
-                    <div class="inline-block p-6 rounded-full bg-gray-700 mb-4 text-gray-500">
+                    <div class="inline-block p-6 rounded-full bg-[#2C2C2C] mb-4 text-gray-500">
                         <i class="fa-regular fa-image text-4xl"></i>
                     </div>
                     <h3 class="text-xl text-gray-300 font-medium">No Image Loaded</h3>
+                    <p class="text-xs text-gray-500 mt-2">Open an image to start cloning.</p>
                 </div>
             </div>
         </div>
@@ -125,8 +161,22 @@
         function init() {
             inputs.size.addEventListener('input', (e) => { state.brushSize = parseInt(e.target.value); displays.size.textContent = state.brushSize + 'px'; updateBrushTip(); requestAnimationFrame(drawUI); });
             inputs.hardness.addEventListener('input', (e) => { state.hardness = parseInt(e.target.value) / 100; displays.hardness.textContent = Math.round(state.hardness * 100) + '%'; updateBrushTip(); });
-            window.addEventListener('keydown', (e) => { if (e.key === 'Alt') { state.isAltPressed = true; document.body.style.cursor = 'crosshair'; statusMsg.textContent = 'Set source point'; } });
-            window.addEventListener('keyup', (e) => { if (e.key === 'Alt') { state.isAltPressed = false; document.body.style.cursor = 'default'; statusMsg.textContent = state.sourcePoint ? 'Ready to clone' : 'Alt+Click to set source'; } });
+            
+            window.addEventListener('keydown', (e) => { 
+                if (e.key === 'Alt') { 
+                    state.isAltPressed = true; 
+                    document.body.style.cursor = 'crosshair'; 
+                    statusMsg.innerHTML = '<span class="text-[#DDBB38]"><i class="fa-solid fa-crosshairs"></i> Set source point</span>'; 
+                } 
+            });
+            window.addEventListener('keyup', (e) => { 
+                if (e.key === 'Alt') { 
+                    state.isAltPressed = false; 
+                    document.body.style.cursor = 'default'; 
+                    statusMsg.textContent = state.sourcePoint ? 'Ready to clone' : 'Hold Alt + Click to set source'; 
+                } 
+            });
+            
             mainCanvas.addEventListener('mousedown', handleMouseDown);
             window.addEventListener('mousemove', handleMouseMove);
             window.addEventListener('mouseup', () => state.isDrawing = false);
@@ -148,6 +198,7 @@
                     emptyState.style.display = 'none';
                     saveHistory();
                     updateBrushTip();
+                    statusMsg.textContent = "Hold Alt + Click to set source point";
                 }
                 img.src = event.target.result;
             }
@@ -165,7 +216,10 @@
 
         function getMousePos(evt) {
             const rect = mainCanvas.getBoundingClientRect();
-            return { x: (evt.clientX - rect.left) * (mainCanvas.width / rect.width), y: (evt.clientY - rect.top) * (mainCanvas.height / rect.height) };
+            return { 
+                x: (evt.clientX - rect.left) * (mainCanvas.width / rect.width), 
+                y: (evt.clientY - rect.top) * (mainCanvas.height / rect.height) 
+            };
         }
 
         let cloneOffset = {x:0, y:0};
@@ -174,6 +228,8 @@
             const pos = getMousePos(e);
             if (state.isAltPressed) {
                 state.sourcePoint = pos;
+                // Visual feedback for setting source
+                drawUI(pos);
             } else if (state.sourcePoint) {
                 saveHistory();
                 state.isDrawing = true;
@@ -203,12 +259,20 @@
 
         function drawUI(mousePos) {
             uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            
+            // Draw Cursor Circle
             uiCtx.beginPath(); uiCtx.arc(mousePos.x, mousePos.y, state.brushSize/2, 0, Math.PI*2);
-            uiCtx.strokeStyle = 'rgba(255,255,255,0.8)'; uiCtx.stroke();
+            uiCtx.strokeStyle = 'rgba(221, 187, 56, 0.8)'; // Brand Yellow Outline
+            uiCtx.lineWidth = 2;
+            uiCtx.stroke();
+            
+            // Draw Source Point Crosshair
             if (state.sourcePoint) {
-                uiCtx.beginPath(); uiCtx.moveTo(state.sourcePoint.x-10, state.sourcePoint.y); uiCtx.lineTo(state.sourcePoint.x+10, state.sourcePoint.y);
+                uiCtx.beginPath(); 
+                uiCtx.moveTo(state.sourcePoint.x-10, state.sourcePoint.y); uiCtx.lineTo(state.sourcePoint.x+10, state.sourcePoint.y);
                 uiCtx.moveTo(state.sourcePoint.x, state.sourcePoint.y-10); uiCtx.lineTo(state.sourcePoint.x, state.sourcePoint.y+10);
-                uiCtx.strokeStyle = '#3b82f6'; uiCtx.stroke();
+                uiCtx.strokeStyle = '#DDBB38'; // Brand Yellow
+                uiCtx.stroke();
             }
         }
 
