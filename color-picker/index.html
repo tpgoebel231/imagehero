@@ -131,6 +131,7 @@
     </div>
 
     <script>
+<script>
         const imageLoader = document.getElementById('imageLoader');
         const mainCanvas = document.getElementById('mainCanvas');
         const uiCanvas = document.getElementById('uiCanvas');
@@ -152,6 +153,7 @@
         const rgbInput = document.getElementById('rgbValue');
 
         let isImageLoaded = false;
+        let isLocked = false; // NEW: Tracks if the color is frozen
 
         function init() {
             // Set zoom canvas resolution
@@ -164,7 +166,9 @@
             uiCanvas.addEventListener('mousemove', handleHover);
             uiCanvas.addEventListener('click', handleClick);
             uiCanvas.addEventListener('mouseleave', () => {
-                statusMsg.textContent = isImageLoaded ? "Ready to pick" : "Waiting for image...";
+                if (!isLocked) { // Only update message if not locked
+                    statusMsg.textContent = isImageLoaded ? "Ready to pick" : "Waiting for image...";
+                }
             });
 
             // Copy Buttons
@@ -184,7 +188,8 @@
                     canvasStack.style.display = 'block';
                     emptyState.style.display = 'none';
                     isImageLoaded = true;
-                    statusMsg.textContent = "Hover to preview color";
+                    isLocked = false; // Reset lock on new image
+                    statusMsg.textContent = "Hover to preview, Click to lock color";
                     
                     // Allow UI canvas to receive pointer events
                     uiCanvas.style.pointerEvents = "auto";
@@ -195,9 +200,10 @@
         }
 
         function handleHover(e) {
-            if (!isImageLoaded) return;
-            const pos = getMousePos(e);
+            // If no image OR if locked, stop updating
+            if (!isImageLoaded || isLocked) return;
             
+            const pos = getMousePos(e);
             coordDisplay.textContent = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
             
             // 1. Get pixel data
@@ -214,16 +220,29 @@
 
         function handleClick(e) {
             if (!isImageLoaded) return;
-            const pos = getMousePos(e);
-            const pixel = ctx.getImageData(pos.x, pos.y, 1, 1).data;
             
-            // Flash effect on click
-            const overlay = document.createElement('div');
-            overlay.className = 'absolute inset-0 bg-white opacity-50 pointer-events-none transition-opacity duration-200';
-            colorSwatch.appendChild(overlay);
-            setTimeout(() => overlay.remove(), 100);
+            // Toggle Lock State
+            isLocked = !isLocked;
 
-            statusMsg.textContent = "Color captured! Click copy to save.";
+            if (isLocked) {
+                // LOCK MODE
+                statusMsg.innerHTML = '<span class="text-green-400 font-bold"><i class="fa-solid fa-lock"></i> Color Locked. Safe to copy.</span>';
+                uiCanvas.style.cursor = 'default'; // Visual cue that we are static
+                
+                // Flash effect
+                const overlay = document.createElement('div');
+                overlay.className = 'absolute inset-0 bg-white opacity-50 pointer-events-none transition-opacity duration-200';
+                colorSwatch.appendChild(overlay);
+                setTimeout(() => overlay.remove(), 100);
+
+            } else {
+                // UNLOCK MODE
+                statusMsg.textContent = "Scanning... Click to lock new color.";
+                uiCanvas.style.cursor = 'crosshair'; // Return to aiming cursor
+                
+                // Immediately update to current mouse pos to prevent "jump"
+                handleHover(e);
+            }
         }
 
         function updateColorDisplay(r, g, b) {
@@ -245,27 +264,22 @@
         }
 
         function drawZoom(x, y) {
-            // Source coordinates (center around mouse)
-            // Zoom factor logic: displaying a 20x20 area on a 100x100 canvas = 5x zoom
             const srcSize = 20; 
             const halfSrc = srcSize / 2;
             
-            // Clear zoom canvas
             zoomCtx.fillStyle = '#111827';
             zoomCtx.fillRect(0, 0, zoomCanvas.width, zoomCanvas.height);
 
-            // Draw magnified image
             zoomCtx.drawImage(
                 mainCanvas, 
-                Math.max(0, x - halfSrc), Math.max(0, y - halfSrc), srcSize, srcSize, // Source
-                0, 0, zoomCanvas.width, zoomCanvas.height // Dest
+                Math.max(0, x - halfSrc), Math.max(0, y - halfSrc), srcSize, srcSize, 
+                0, 0, zoomCanvas.width, zoomCanvas.height 
             );
         }
 
         function drawCursor(x, y) {
             uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
             
-            // Draw crosshair ring
             uiCtx.beginPath();
             uiCtx.arc(x, y, 5, 0, Math.PI * 2);
             uiCtx.strokeStyle = 'white';
@@ -281,7 +295,6 @@
 
         function getMousePos(evt) {
             const rect = mainCanvas.getBoundingClientRect();
-            // Calculate scale ratio in case canvas is resized by CSS
             const scaleX = mainCanvas.width / rect.width;
             const scaleY = mainCanvas.height / rect.height;
             return { 
@@ -296,7 +309,7 @@
 
         function copyToClipboard(inputElement, msgId) {
             inputElement.select();
-            inputElement.setSelectionRange(0, 99999); // Mobile
+            inputElement.setSelectionRange(0, 99999); 
             navigator.clipboard.writeText(inputElement.value).then(() => {
                 const msg = document.getElementById(msgId);
                 msg.style.opacity = '1';
