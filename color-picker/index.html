@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageHero | Precision Color Picker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #1a1a1a; color: #e5e5e5; overflow: hidden; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #2d2d2d; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        .checkerboard { 
+            background-color: #ffffff; 
+            background-image: 
+                linear-gradient(45deg, #cccccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #cccccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #cccccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #cccccc 75%);
+            background-size: 20px 20px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+        }
+        #uiCanvas { cursor: crosshair; }
+        .magnifier-grid {
+            image-rendering: pixelated; /* Essential for sharp zoom */
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen text-sm select-none">
+
+    <nav class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between shrink-0 z-30">
+        <a href="../index.html" class="flex items-center gap-2 text-xl font-bold">
+            <span class="text-blue-400 tracking-tighter font-extrabold">ImageHero</span>
+        </a>
+        <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500 items-center">
+            <a href="../index.html" class="hover:text-white transition">Home</a>
+            <a href="../transparency/index.html" class="hover:text-red-400 transition">Transparency</a>
+            <a href="../clone-stamp/index.html" class="hover:text-blue-400 transition">Clone Stamp</a>
+            <a href="index.html" class="text-green-400">Color Picker</a>
+            <a href="https://x.com/tpgoebel" target="_blank" class="hover:text-white transition text-lg"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <div class="w-72 bg-gray-900 border-r border-gray-800 flex flex-col shadow-xl z-20">
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                
+                <div class="space-y-2">
+                    <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Image Source</label>
+                    <label class="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-green-500 hover:bg-gray-800 transition group">
+                        <div class="text-center">
+                            <i class="fa-solid fa-folder-open text-xl text-gray-500 group-hover:text-green-400 mb-1"></i>
+                            <p class="text-xs text-gray-400">Open Local Image</p>
+                        </div>
+                        <input type="file" id="imageLoader" class="hidden" accept="image/*"/>
+                    </label>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Active Color</label>
+                    <div id="colorSwatch" class="w-full h-24 rounded-lg shadow-inner border border-gray-700 flex items-center justify-center transition-colors" style="background-color: #1a1a1a;">
+                        <span id="contrastText" class="font-mono font-bold text-lg opacity-50">Select Pixel</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-gray-800">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-gray-400 font-semibold uppercase text-xs tracking-wider">HEX Code</label>
+                            <span id="copyMsgHex" class="text-green-400 text-xs opacity-0 transition-opacity">Copied!</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="hexValue" readonly value="#000000" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-300 font-mono focus:outline-none focus:border-green-500">
+                            <button id="btnCopyHex" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 px-3 rounded transition">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-gray-400 font-semibold uppercase text-xs tracking-wider">RGB Value</label>
+                            <span id="copyMsgRgb" class="text-green-400 text-xs opacity-0 transition-opacity">Copied!</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="rgbValue" readonly value="rgb(0, 0, 0)" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-300 font-mono focus:outline-none focus:border-green-500">
+                            <button id="btnCopyRgb" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 px-3 rounded transition">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-4 border-t border-gray-800">
+                    <label class="block text-gray-400 font-semibold uppercase text-xs tracking-wider">Pixel Zoom (5x)</label>
+                    <div class="w-full aspect-square bg-black rounded border border-gray-700 overflow-hidden relative">
+                        <canvas id="zoomCanvas" class="w-full h-full magnifier-grid"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="w-2 h-2 border border-red-500 shadow-sm bg-transparent"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 text-center mt-1">Hover image to inspect</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col bg-gray-800 overflow-hidden relative">
+            <div class="h-10 bg-gray-900 border-b border-gray-800 flex items-center px-4 justify-between text-xs text-gray-400 shrink-0">
+                <span id="statusMsg">Waiting for image...</span>
+                <span id="coordDisplay">X: 0 Y: 0</span>
+            </div>
+            <div class="flex-1 relative overflow-auto flex items-center justify-center p-10" id="canvasWrapper">
+                <div class="relative shadow-2xl checkerboard" id="canvasStack" style="display:none;">
+                    <canvas id="mainCanvas" class="block bg-transparent"></canvas>
+                    <canvas id="uiCanvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
+                </div>
+                <div id="emptyState" class="text-center">
+                    <div class="inline-block p-6 rounded-full bg-gray-700 mb-4 text-gray-500">
+                        <i class="fa-solid fa-eye-dropper text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl text-gray-300 font-medium">No Image Loaded</h3>
+                    <p class="text-xs text-gray-500 mt-2">Open an image to pick colors.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageLoader = document.getElementById('imageLoader');
+        const mainCanvas = document.getElementById('mainCanvas');
+        const uiCanvas = document.getElementById('uiCanvas');
+        const zoomCanvas = document.getElementById('zoomCanvas');
+        
+        const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+        const uiCtx = uiCanvas.getContext('2d');
+        const zoomCtx = zoomCanvas.getContext('2d');
+
+        const canvasStack = document.getElementById('canvasStack');
+        const emptyState = document.getElementById('emptyState');
+        const statusMsg = document.getElementById('statusMsg');
+        const coordDisplay = document.getElementById('coordDisplay');
+
+        // Output Elements
+        const colorSwatch = document.getElementById('colorSwatch');
+        const contrastText = document.getElementById('contrastText');
+        const hexInput = document.getElementById('hexValue');
+        const rgbInput = document.getElementById('rgbValue');
+
+        let isImageLoaded = false;
+
+        function init() {
+            // Set zoom canvas resolution
+            zoomCanvas.width = 100;
+            zoomCanvas.height = 100;
+            
+            imageLoader.addEventListener('change', handleImageSelection);
+            
+            // Mouse Events
+            uiCanvas.addEventListener('mousemove', handleHover);
+            uiCanvas.addEventListener('click', handleClick);
+            uiCanvas.addEventListener('mouseleave', () => {
+                statusMsg.textContent = isImageLoaded ? "Ready to pick" : "Waiting for image...";
+            });
+
+            // Copy Buttons
+            document.getElementById('btnCopyHex').addEventListener('click', () => copyToClipboard(hexInput, 'copyMsgHex'));
+            document.getElementById('btnCopyRgb').addEventListener('click', () => copyToClipboard(rgbInput, 'copyMsgRgb'));
+        }
+
+        function handleImageSelection(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    mainCanvas.width = uiCanvas.width = img.width;
+                    mainCanvas.height = uiCanvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    canvasStack.style.display = 'block';
+                    emptyState.style.display = 'none';
+                    isImageLoaded = true;
+                    statusMsg.textContent = "Hover to preview color";
+                    
+                    // Allow UI canvas to receive pointer events
+                    uiCanvas.style.pointerEvents = "auto";
+                }
+                img.src = event.target.result;
+            }
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function handleHover(e) {
+            if (!isImageLoaded) return;
+            const pos = getMousePos(e);
+            
+            coordDisplay.textContent = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
+            
+            // 1. Get pixel data
+            const pixel = ctx.getImageData(pos.x, pos.y, 1, 1).data;
+            const r = pixel[0], g = pixel[1], b = pixel[2], a = pixel[3];
+            
+            // 2. Update UI
+            if (a > 0) {
+                updateColorDisplay(r, g, b);
+                drawZoom(pos.x, pos.y);
+                drawCursor(pos.x, pos.y);
+            }
+        }
+
+        function handleClick(e) {
+            if (!isImageLoaded) return;
+            const pos = getMousePos(e);
+            const pixel = ctx.getImageData(pos.x, pos.y, 1, 1).data;
+            
+            // Flash effect on click
+            const overlay = document.createElement('div');
+            overlay.className = 'absolute inset-0 bg-white opacity-50 pointer-events-none transition-opacity duration-200';
+            colorSwatch.appendChild(overlay);
+            setTimeout(() => overlay.remove(), 100);
+
+            statusMsg.textContent = "Color captured! Click copy to save.";
+        }
+
+        function updateColorDisplay(r, g, b) {
+            const hex = rgbToHex(r, g, b);
+            const rgb = `rgb(${r}, ${g}, ${b})`;
+
+            // Update Swatch
+            colorSwatch.style.backgroundColor = hex;
+            contrastText.textContent = hex;
+            
+            // Calc contrast for text color (black or white)
+            const brightness = Math.round(((parseInt(r) * 299) + (parseInt(g) * 587) + (parseInt(b) * 114)) / 1000);
+            contrastText.style.color = brightness > 125 ? 'black' : 'white';
+            contrastText.style.opacity = '1';
+
+            // Update Inputs
+            hexInput.value = hex;
+            rgbInput.value = rgb;
+        }
+
+        function drawZoom(x, y) {
+            // Source coordinates (center around mouse)
+            // Zoom factor logic: displaying a 20x20 area on a 100x100 canvas = 5x zoom
+            const srcSize = 20; 
+            const halfSrc = srcSize / 2;
+            
+            // Clear zoom canvas
+            zoomCtx.fillStyle = '#111827';
+            zoomCtx.fillRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+
+            // Draw magnified image
+            zoomCtx.drawImage(
+                mainCanvas, 
+                Math.max(0, x - halfSrc), Math.max(0, y - halfSrc), srcSize, srcSize, // Source
+                0, 0, zoomCanvas.width, zoomCanvas.height // Dest
+            );
+        }
+
+        function drawCursor(x, y) {
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            
+            // Draw crosshair ring
+            uiCtx.beginPath();
+            uiCtx.arc(x, y, 5, 0, Math.PI * 2);
+            uiCtx.strokeStyle = 'white';
+            uiCtx.lineWidth = 1;
+            uiCtx.stroke();
+            
+            uiCtx.beginPath();
+            uiCtx.arc(x, y, 4, 0, Math.PI * 2);
+            uiCtx.strokeStyle = 'black';
+            uiCtx.lineWidth = 1;
+            uiCtx.stroke();
+        }
+
+        function getMousePos(evt) {
+            const rect = mainCanvas.getBoundingClientRect();
+            // Calculate scale ratio in case canvas is resized by CSS
+            const scaleX = mainCanvas.width / rect.width;
+            const scaleY = mainCanvas.height / rect.height;
+            return { 
+                x: Math.floor((evt.clientX - rect.left) * scaleX), 
+                y: Math.floor((evt.clientY - rect.top) * scaleY) 
+            };
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        function copyToClipboard(inputElement, msgId) {
+            inputElement.select();
+            inputElement.setSelectionRange(0, 99999); // Mobile
+            navigator.clipboard.writeText(inputElement.value).then(() => {
+                const msg = document.getElementById(msgId);
+                msg.style.opacity = '1';
+                setTimeout(() => msg.style.opacity = '0', 2000);
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
