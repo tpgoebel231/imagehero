@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Patent Explained | ImageHero.app</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 1s ease-out',
+                        'ping': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom scrollbar to match the theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        body { background-color: #09090b; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
+        import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+        
+        // Import Lucide Icons from CDN
+        import { 
+            Cpu, Brain, Car, Zap, Layers, AlertTriangle, CheckCircle, Clock, 
+            ChevronRight, Maximize2, MoveRight, Database, ArrowDown, Sparkles, 
+            ExternalLink, Wand2, Image as ImageIcon, Eraser, Stamp, Pipette, 
+            ShieldCheck, Lock 
+        } from 'https://esm.sh/lucide-react@0.292.0';
+
+        // --- PASTE YOUR APP COMPONENT CODE BELOW THIS LINE ---
+
+        const App = () => {
+          const [activeSection, setActiveSection] = useState('intro');
+
+          return (
+            // Palette: Zinc (Black/Grays) + Cyan + Violet for main site
+            <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-cyan-500 selection:text-black">
+              <NavBar activeSection={activeSection} setActiveSection={setActiveSection} />
+              
+              <main className="max-w-4xl mx-auto px-4 py-8 space-y-32">
+                <HeroSection />
+                <ConceptExplainerSection />
+                <ProblemSection />
+                <DriftSimulation />
+                <SolutionDeepDive />
+              </main>
+
+              {/* Distinct ImageHero Section */}
+              <ImageHeroPromo />
+
+              <Footer />
+            </div>
+          );
+        };
+
+        const NavBar = ({ activeSection, setActiveSection }) => {
+          const navItems = [
+            { id: 'intro', label: 'Overview' },
+            { id: 'concepts', label: 'RoPE & Logs' },
+            { id: 'problem', label: 'The Problem' },
+            { id: 'solution', label: 'The Solution' },
+          ];
+
+          const scrollTo = (id) => {
+            const element = document.getElementById(id);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+              setActiveSection(id);
+            }
+          };
+
+          return (
+            <nav className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 shadow-lg">
+              <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
+                  <Zap className="text-cyan-400 fill-current" />
+                  <span>TESLA<span className="text-zinc-500 font-normal"> PATENT EXPLAINED</span></span>
+                </div>
+                <div className="hidden md:flex gap-6">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollTo(item.id)}
+                      className={`text-sm font-medium transition-colors hover:text-cyan-400 ${
+                        activeSection === item.id ? 'text-cyan-400' : 'text-zinc-400'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </nav>
+          );
+        };
+
+        const HeroSection = () => (
+          <section id="intro" className="pt-12 text-center space-y-8 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-900/20 border border-cyan-500/30 text-cyan-400 text-sm font-medium">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              </span>
+              Patent US20260017019A1 Breakdown
+            </div>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
+              The Mathematical <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400">
+                "Cheat Code"
+              </span>
+            </h1>
+            <div className="max-w-2xl mx-auto space-y-6 text-lg text-zinc-300 leading-relaxed">
+              <p>
+                Tesla has patented a way to force inexpensive, older computer chips (HW3) to perform like cutting-edge supercomputers.
+              </p>
+              <p className="text-zinc-400">
+                By using a new "Mixed-Precision Bridge," they can run advanced AI models without needing expensive hardware upgrades. Here is how it works, explained in plain English.
+              </p>
+            </div>
+          </section>
+        );
+
+        const ConceptExplainerSection = () => (
+          <section id="concepts" className="space-y-16">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4">First, The Basics</h2>
+              <p className="text-zinc-400">To understand the patent, we need to understand two key concepts: <strong>RoPE</strong> and <strong>Logarithms</strong>.</p>
+            </div>
+
+            {/* RoPE Explanation */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="order-2 md:order-1 relative h-64 bg-zinc-900 rounded-xl border border-zinc-800 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-violet-900/20 to-transparent"></div>
+                <div className="relative z-10 text-center">
+                  <div className="w-32 h-32 rounded-full border-4 border-zinc-700 mx-auto flex items-center justify-center relative">
+                     <div className="absolute w-1 h-14 bg-cyan-400 bottom-1/2 left-1/2 -translate-x-1/2 origin-bottom rotate-45 transform transition-transform duration-1000"></div>
+                     <div className="absolute w-2 h-2 bg-white rounded-full"></div>
+                     <span className="absolute top-2 right-4 text-xs text-zinc-400">45°</span>
+                  </div>
+                  <p className="mt-4 text-sm font-mono text-violet-400">Position = Angle</p>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 space-y-4">
+                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Clock className="text-violet-500" />
+                  What is RoPE?
+                </h3>
+                <div className="space-y-3 text-zinc-300 leading-relaxed">
+                  <p>
+                    <strong>RoPE</strong> stands for <em>Rotary Positional Embedding</em>. Think of it as the "GPS of the mind" for the car's memory.
+                  </p>
+                  <p>
+                    When a Tesla drives, it sees hundreds of objects. It needs to know exactly where they are relative to the car, and <strong>when</strong> it saw them.
+                  </p>
+                  <p>
+                    RoPE assigns a unique <strong>rotation angle</strong> to every object to lock it in place.
+                    <br/><span className="text-sm text-zinc-500 italic block mt-2 ml-4 border-l-2 border-zinc-700 pl-3">
+                      Example: The car sees a <strong>Stop Sign</strong>. RoPE rotates the data for that sign by a specific angle. Even if the car moves and looks away for 30 seconds, that specific angle tells the AI: "This Stop Sign is still exactly 50 meters behind you on the right."
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Logarithm Explanation */}
+            <div className="grid md:grid-cols-2 gap-12 items-center pt-8 border-t border-zinc-800">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Database className="text-cyan-500" />
+                  The Logarithmic Shortcut
+                </h3>
+                <div className="space-y-3 text-zinc-300 leading-relaxed">
+                  <p>
+                    Calculating these exact angles usually requires massive, complex numbers (32-bit). This is too heavy for older chips.
+                  </p>
+                  <p>
+                    Tesla's trick is to convert these numbers into <strong>Logarithms</strong>.
+                  </p>
+                  <p>
+                    Think of a logarithm as a "compression zip file" for math. Instead of multiplying huge numbers (which is hard for chips), logarithms allow you to simply <strong>add</strong> them (which is easy and fast).
+                  </p>
+                  <ul className="space-y-2 mt-2">
+                    <li className="flex items-start gap-2 text-sm text-zinc-400">
+                      <CheckCircle size={16} className="text-emerald-500 mt-0.5" />
+                      <span>It shrinks the data size (saves memory).</span>
+                    </li>
+                    <li className="flex items-start gap-2 text-sm text-zinc-400">
+                      <CheckCircle size={16} className="text-emerald-500 mt-0.5" />
+                      <span>It simplifies complex multiplication into simple addition.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 space-y-6">
+                <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-zinc-400">Standard Math (Hard)</span>
+                    <span className="text-zinc-400">Logarithmic Math (Easy)</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="bg-cyan-900/10 border border-cyan-500/30 p-4 rounded text-center flex-1">
+                        <div className="text-cyan-400 font-bold text-lg">1,000 × 1,000</div>
+                        <div className="text-xs text-zinc-500 mt-1">= 1,000,000</div>
+                    </div>
+                    <MoveRight className="text-zinc-600" />
+                    <div className="bg-violet-900/10 border border-violet-500/30 p-4 rounded text-center flex-1">
+                        <div className="text-violet-400 font-bold text-lg">3 + 3</div>
+                        <div className="text-xs text-zinc-500 mt-1">= 6 (zeros)</div>
+                    </div>
+                </div>
+                <p className="text-xs text-center text-zinc-500">
+                    *Simplified analogy: Logs track the "magnitude" rather than the raw number.
+                </p>
+              </div>
+            </div>
+          </section>
+        );
+
+        const ProblemSection = () => {
+          const scrollToSim = () => {
+            const element = document.getElementById('simulation');
+            if (element) element.scrollIntoView({ behavior: 'smooth' });
+          };
+
+          return (
+            <section id="problem" className="grid md:grid-cols-2 gap-12 items-center bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800">
+              <div className="space-y-6">
+                <h2 className="text-3xl font-bold flex items-center gap-3">
+                  <AlertTriangle className="text-amber-500" />
+                  The Problem: "Drift"
+                </h2>
+                <p className="text-zinc-300 text-lg">
+                  If you try to run this high-precision angle math on a low-precision 8-bit chip, you have to round the numbers.
+                </p>
+                <p className="text-zinc-300 text-lg">
+                  <strong>Rounding introduces errors.</strong> Over time, these tiny errors add up. 
+                </p>
+                <p className="text-zinc-300">
+                  Imagine navigating a ship. If your compass is off by just 0.1 degrees, after 100 miles, you will miss your destination completely. In a Tesla, this means the car might "forget" exactly where that stop sign was. This is called <strong>Drift</strong>.
+                </p>
+              </div>
+              
+              <div className="relative flex flex-col items-center justify-center space-y-4">
+                <div className="w-full bg-zinc-950 p-6 rounded-lg border border-zinc-800 text-center">
+                  <h4 className="text-zinc-400 text-sm uppercase tracking-widest mb-4">Visualizing Drift</h4>
+                  <p className="text-white mb-4">
+                    The simulation below shows what happens when the car's memory of an object isn't perfect.
+                  </p>
+                  <button 
+                    onClick={scrollToSim}
+                    className="group flex items-center justify-center mx-auto hover:bg-zinc-800 p-2 rounded-full transition-colors"
+                  >
+                    <ArrowDown size={32} className="text-amber-500 animate-bounce group-hover:text-amber-400" />
+                  </button>
+                </div>
+              </div>
+            </section>
+          );
+        };
+
+        const DriftSimulation = () => {
+          const [mode, setMode] = useState('legacy'); // 'legacy' or 'patent'
+          const [drift, setDrift] = useState({ x: 0, y: 0 });
+          const [history, setHistory] = useState([]);
+          const canvasRef = useRef(null);
+          const requestRef = useRef();
+          const timeRef = useRef(0);
+
+          useEffect(() => {
+            const animate = (time) => {
+              const deltaTime = time - timeRef.current;
+              timeRef.current = time;
+
+              setDrift(prev => {
+                const noiseLevel = mode === 'legacy' ? 1.5 : 0.02;
+                const newX = prev.x + (Math.random() - 0.5) * noiseLevel;
+                const newY = prev.y + (Math.random() - 0.5) * noiseLevel;
+                return { x: newX, y: newY };
+              });
+
+              requestRef.current = requestAnimationFrame(animate);
+            };
+            
+            requestRef.current = requestAnimationFrame(animate);
+            return () => cancelAnimationFrame(requestRef.current);
+          }, [mode]);
+
+          useEffect(() => {
+            setDrift({ x: 0, y: 0 });
+            setHistory([]);
+          }, [mode]);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            ctx.fillStyle = '#09090b'; 
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = '#27272a';
+            ctx.lineWidth = 1;
+            for(let i=0; i<width; i+=40) {
+              ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+            }
+
+            // Ghost/Real Object
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.1)';
+            ctx.arc(centerX, centerY - 60, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(34, 211, 238, 0.3)';
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.5)';
+            ctx.font = "12px sans-serif";
+            ctx.fillText("REALITY", centerX - 25, centerY - 90);
+
+            // Drifting Memory
+            const memX = centerX + drift.x;
+            const memY = (centerY - 60) + drift.y;
+
+            if (Math.random() > 0.5) {
+                history.push({x: memX, y: memY});
+                if (history.length > 30) history.shift();
+            }
+            
+            ctx.beginPath();
+            history.forEach((pos, i) => {
+                ctx.fillStyle = `rgba(167, 139, 250, ${i/30 * 0.4})`;
+                ctx.fillRect(pos.x, pos.y, 2, 2);
+            });
+
+            ctx.beginPath();
+            ctx.fillStyle = '#8b5cf6';
+            ctx.arc(memX, memY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillText("STOP", memX - 14, memY + 4);
+            
+            ctx.fillStyle = '#8b5cf6';
+            ctx.fillText("AI MEMORY", memX - 30, memY - 30);
+
+            // Dashboard
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, height - 80, width, 80);
+            ctx.strokeStyle = '#27272a';
+            ctx.beginPath(); ctx.moveTo(0, height-80); ctx.lineTo(width, height-80); ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(centerX, height + 40, 100, Math.PI, 0);
+            ctx.strokeStyle = '#52525b';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+          }, [drift, history]);
+
+          return (
+            <div id="simulation" className="bg-zinc-900 rounded-2xl border border-zinc-700 overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-zinc-700 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Brain className="text-violet-400" />
+                    Memory Drift Simulator
+                  </h3>
+                  <p className="text-sm text-zinc-400">Observe how the car remembers a stationary object's location over time.</p>
+                </div>
+                <div className="flex bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+                  <button
+                    onClick={() => setMode('legacy')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      mode === 'legacy' ? 'bg-rose-900/30 text-rose-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Legacy 8-Bit (Standard)
+                  </button>
+                  <button
+                    onClick={() => setMode('patent')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      mode === 'patent' ? 'bg-emerald-900/30 text-emerald-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Patent Enabled (Mixed)
+                  </button>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <canvas 
+                  ref={canvasRef} 
+                  width={800} 
+                  height={400} 
+                  className="w-full h-[400px] object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-zinc-950/80 backdrop-blur p-4 rounded-lg border border-zinc-800 text-xs font-mono space-y-2">
+                  <div className="flex justify-between w-32">
+                    <span className="text-zinc-400">Drift X:</span>
+                    <span className={mode === 'legacy' ? 'text-rose-400' : 'text-emerald-400'}>{Math.abs(drift.x).toFixed(2)}m</span>
+                  </div>
+                  <div className="flex justify-between w-32">
+                    <span className="text-zinc-400">Drift Y:</span>
+                    <span className={mode === 'legacy' ? 'text-rose-400' : 'text-emerald-400'}>{Math.abs(drift.y).toFixed(2)}m</span>
+                  </div>
+                  <div className="flex justify-between w-32 pt-2 border-t border-zinc-800">
+                    <span className="text-zinc-400">Status:</span>
+                    <span className={mode === 'legacy' ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
+                      {mode === 'legacy' ? 'Unstable' : 'Locked'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const SolutionDeepDive = () => (
+          <section id="solution" className="space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
+              <h2 className="text-3xl font-bold flex items-center justify-center gap-3">
+                <Layers className="text-cyan-500" />
+                The Solution: Mixed-Precision Bridge
+              </h2>
+              <p className="text-zinc-300 text-lg">
+                The patent describes a clever pipeline to get the best of both worlds: the speed of small 8-bit chips and the accuracy of big 32-bit math.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-1 gap-8">
+              {/* Step 1 */}
+              <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-6 hover:border-cyan-500/50 transition-colors">
+                <div className="shrink-0">
+                  <div className="w-16 h-16 bg-cyan-900/20 rounded-xl flex items-center justify-center text-cyan-400">
+                    <Maximize2 size={32} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">1. The "Dehydration" (Logarithms)</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    First, the system converts the precise location data into <strong>logarithms</strong>. As explained earlier, this compresses the numbers. It's like dehydrating food before a camping trip—it takes up way less space in the backpack (memory) but contains the same nutrition (information).
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-6 hover:border-violet-500/50 transition-colors">
+                <div className="shrink-0">
+                  <div className="w-16 h-16 bg-violet-900/20 rounded-xl flex items-center justify-center text-violet-400">
+                    <Cpu size={32} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">2. The 8-Bit Calculation</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    The chip processes these "dehydrated" logarithm numbers using simple addition instead of complex multiplication. This is where the 8-bit chip shines—it can do these simple additions extremely fast without overheating.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 flex flex-col md:flex-row gap-6 hover:border-emerald-500/50 transition-colors">
+                <div className="shrink-0">
+                  <div className="w-16 h-16 bg-emerald-900/20 rounded-xl flex items-center justify-center text-emerald-400">
+                    <Clock size={32} />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">3. The Reassembly (Horner's Method)</h3>
+                  <p className="text-zinc-400 leading-relaxed">
+                    This is the crucial step. The chip needs to convert the answer back from a logarithm to a real number so the car can use it. 
+                  </p>
+                  <p className="text-zinc-400 leading-relaxed mt-2">
+                    Normally, converting back is hard work. Tesla uses a mathematical trick called <strong>Horner's Method</strong>. It's a specific way of writing the equation that reduces the number of steps needed to calculate the answer. It efficiently "rehydrates" the data back into a perfect 32-bit rotation matrix.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+        // Distinct Promotional Section for ImageHero
+        const ImageHeroPromo = () => (
+          <section className="relative overflow-hidden rounded-3xl mx-auto max-w-5xl my-24 group">
+            {/* Vibrant Background - TeslaTobi Palette (Yellow to Red) */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#DDBB38] to-[#A11D20] opacity-90 transition-opacity group-hover:opacity-100"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
+            
+            <div className="relative z-10 px-8 py-16 md:py-20 md:px-12 flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-left">
+              <div className="space-y-6 max-w-xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider">
+                  <ShieldCheck size={14} className="text-white" />
+                  Privacy-First Processing
+                </div>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white leading-tight drop-shadow-sm">
+                  Privacy-Focused <br/> Image Tools
+                </h2>
+                <p className="text-yellow-50 text-lg font-medium leading-relaxed">
+                  Edit images directly in your browser without ever uploading them to a server. Your photos stay on your device.
+                </p>
+
+                {/* Feature Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/10 flex flex-col items-center lg:items-start gap-2">
+                        <Eraser className="text-white" size={24} />
+                        <span className="font-bold text-white text-sm">PNG Transparency</span>
+                        <span className="text-yellow-100 text-xs">Remove backgrounds instantly</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/10 flex flex-col items-center lg:items-start gap-2">
+                        <Stamp className="text-white" size={24} />
+                        <span className="font-bold text-white text-sm">Clone Stamp</span>
+                        <span className="text-yellow-100 text-xs">Clean up unwanted details</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/10 flex flex-col items-center lg:items-start gap-2">
+                        <Pipette className="text-white" size={24} />
+                        <span className="font-bold text-white text-sm">Color Picker</span>
+                        <span className="text-yellow-100 text-xs">Extract palettes from photos</span>
+                    </div>
+                </div>
+              </div>
+              
+              <div className="shrink-0 flex flex-col gap-4 items-center">
+                <a 
+                  href="https://imagehero.app" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group/btn relative inline-flex items-center gap-3 bg-white text-[#A11D20] px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-red-900/30 transform transition-all hover:scale-105 hover:shadow-2xl"
+                >
+                  <Wand2 size={24} className="text-[#A11D20] group-hover/btn:rotate-12 transition-transform" />
+                  Open ImageHero.app
+                  <ExternalLink size={18} className="text-[#A11D20]/60" />
+                </a>
+                <div className="flex items-center gap-2 text-yellow-100 text-sm font-medium">
+                    <Lock size={14} />
+                    No server uploads required
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+        const BotIcon = ({ className }) => (
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className={`w-6 h-6 ${className}`}
+          >
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <circle cx="12" cy="5" r="2" />
+            <path d="M12 7v4" />
+            <line x1="8" y1="16" x2="8" y2="16" />
+            <line x1="16" y1="16" x2="16" y2="16" />
+          </svg>
+        );
+
+        const ListItem = ({ text }) => (
+          <li className="flex items-start gap-3">
+            <CheckCircle className="text-emerald-500 w-5 h-5 shrink-0 mt-0.5" />
+            <span className="text-zinc-300">{text}</span>
+          </li>
+        );
+
+        const Footer = () => (
+          <footer className="border-t border-zinc-800 py-12 text-center text-zinc-500 text-sm">
+            <p>Based on Tesla Patents US20260017019A1 & US20260017503A1</p>
+            <p className="mt-2">
+              Based on Analysis by{' '}
+              <a 
+                href="https://x.com/tslaming/status/2012374751982092501?s=20" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-cyan-500 hover:text-cyan-400 underline underline-offset-2 transition-colors"
+              >
+                @TslaMing
+              </a>
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <p>(C) TPG Media</p>
+              <a href="https://imagehero.app/contact.html" className="hover:text-cyan-400 transition-colors underline underline-offset-2">Contact</a>
+            </div>
+            <p className="mt-2 text-zinc-600">Educational Visualization • Not affiliated with Tesla, Inc.</p>
+          </footer>
+        );
+
+        // --- RENDER THE APP ---
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
