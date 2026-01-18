@@ -3,39 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact | ImageHero</title>
+    <title>ImageHero | Contact & About</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        body { background-color: #111827; color: #f3f4f6; }
-        .contact-card { background-color: #1f2937; border: 1px solid #374151; }
+        /* TeslaTobi Brand Palette */
+        :root {
+            --tt-red: #A11D20;
+            --tt-yellow: #DDBB38;
+            --tt-gray: #2C2C2C;
+            --tt-dark: #1f1f1f; 
+            --tt-blue: #38b6ff; 
+        }
+
+        body { background-color: var(--tt-dark); color: #f3f4f6; }
+
+        /* Profile Image Styling */
+        .profile-card {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px -5px rgba(221, 187, 56, 0.3); /* Yellow Glow */
+        }
     </style>
 </head>
-<body class="min-h-screen py-16 px-6">
-    <div class="max-w-2xl mx-auto text-center">
-        <a href="/" class="text-blue-400 hover:text-blue-300 transition mb-8 inline-block">← Back to ImageHero</a>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-[#2C2C2C] border-b border-[#404040] px-6 py-4 flex items-center justify-between shrink-0">
+        <a href="index.html" class="flex items-center gap-2 text-xl font-bold">
+            <span class="text-[#DDBB38] tracking-tighter font-extrabold">ImageHero</span>
+        </a>
+        <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400 items-center">
+            <a href="index.html" class="hover:text-white transition">Home</a>
+            <a href="transparency/index.html" class="hover:text-[#A11D20] transition">Transparency</a>
+            <a href="clone-stamp/index.html" class="hover:text-[#DDBB38] transition">Clone Stamp</a>
+            <a href="color-picker/index.html" class="hover:text-[#38b6ff] transition">Color Picker</a>
+        </div>
+    </nav>
+
+    <main class="flex-1 container mx-auto px-6 py-12 flex items-center justify-center">
         
-        <h1 class="text-4xl font-bold mb-6">Get in Touch</h1>
-        <p class="text-gray-400 mb-12 italic text-lg">
-            Have feedback, a feature request, or just want to say hello?
-        </p>
-
-        <div class="contact-card p-10 rounded-3xl shadow-2xl">
-            <div class="mb-8">
-                <i class="fa-brands fa-x-twitter text-5xl text-blue-400"></i>
+        <div class="max-w-5xl w-full grid md:grid-cols-12 gap-12 items-center">
+            
+            <div class="md:col-span-5 relative group">
+                <div class="absolute -inset-4 bg-gradient-to-tr from-[#A11D20] to-[#DDBB38] rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                
+                <div class="relative profile-card rounded-2xl overflow-hidden border-2 border-[#404040] bg-[#2C2C2C]">
+                    <img src="Tobi.jpg" alt="Tobias Goebel" class="w-full h-auto object-cover grayscale group-hover:grayscale-0 transition duration-500">
+                </div>
             </div>
-            <h2 class="text-2xl font-bold mb-4 text-white">Reach out on X</h2>
-            <p class="text-gray-400 mb-8 leading-relaxed">
-                For the fastest response and to join the conversation about our tools and projects like <strong>Robots4Real</strong>, send a message or mention us on X.
-            </p>
-            <a href="https://x.com/tpgoebel" target="_blank" class="inline-block bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-10 rounded-full transition shadow-lg">
-                Follow @tpgoebel
-            </a>
+
+            <div class="md:col-span-7 space-y-8">
+                
+                <div>
+                    <h5 class="text-[#DDBB38] font-bold tracking-widest uppercase text-sm mb-2">The Creator</h5>
+                    <h1 class="text-5xl font-extrabold text-white mb-4">Tobias Goebel</h1>
+                    <p class="text-xl text-gray-300 leading-relaxed">
+                        Product Marketing Professional & Technologist based in Brookline, MA.
+                    </p>
+                </div>
+
+                <div class="space-y-4 text-gray-400 leading-relaxed border-l-4 border-[#A11D20] pl-6">
+                    <p>
+                        I built <strong>ImageHero</strong> because I believe professional creative tools should be accessible, fast, and most importantly—private. 
+                    </p>
+                    <p>
+                        Meet me on X! I also invite you to explore my German-speaking YouTube channel 
+                        <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="text-[#DDBB38] hover:text-white font-bold underline decoration-[#DDBB38] underline-offset-4 transition">TeslaTobi</a> 
+                        for news and commentary on all things Tesla.
+                    </p>
+                </div>
+
+                <div class="pt-4">
+                    <a href="https://x.com/tpgoebel" target="_blank" class="inline-flex items-center justify-center gap-3 bg-[#A11D20] hover:bg-[#8a181b] text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-red-900/20 transition group">
+                        <i class="fa-brands fa-x-twitter text-xl group-hover:scale-110 transition"></i>
+                        <span>Connect on X</span>
+                    </a>
+                </div>
+
+                <div class="pt-8 flex gap-6 text-sm text-gray-500 font-mono border-t border-[#404040] mt-8">
+                    <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="hover:text-[#DDBB38] transition flex items-center gap-2">
+                        <i class="fa-brands fa-youtube"></i> TeslaTobi
+                    </a>
+                    <a href="https://x.com/robots4real" target="_blank" class="hover:text-[#38b6ff] transition flex items-center gap-2">
+                        <i class="fa-solid fa-robot"></i> Robots4Real
+                    </a>
+                </div>
+
+            </div>
         </div>
 
-        <div class="mt-16 text-gray-500 text-sm">
-            <p>ImageHero is a TPG Media project based in Brookline, MA.</p>
+    </main>
+
+    <footer class="container mx-auto px-6 py-12 text-center text-gray-500 text-sm border-t border-[#404040]">
+        <div class="flex justify-center gap-6 mb-6">
+            <a href="privacy-policy.html" class="hover:text-[#DDBB38] transition">Privacy Policy</a>
+            <a href="terms.html" class="hover:text-[#DDBB38] transition">Terms of Service</a>
         </div>
-    </div>
+        <p>© 2026 ImageHero. A TPG Media Project.</p>
+    </footer>
+
 </body>
 </html>
