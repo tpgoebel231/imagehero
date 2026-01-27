@@ -55,7 +55,7 @@
             </a>
         </div>
         <div class="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-            Deadline: Mitte Februar
+            Deadline: 14. Februar
         </div>
     </div>
 </header>
@@ -63,10 +63,11 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
     <section class="text-center space-y-4">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Kauf vs. Abo: Deine Entscheidung</h2>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Letzte Chance für den Kauf?</h2>
         <p class="max-w-2xl mx-auto text-lg text-gray-600">
-            Mitte Februar könnte die Option, das „Full Self-Driving“ (FSD) Paket einmalig zu kaufen, entfallen. 
-            Diese Analyse zeigt dir, ob sich das Abo durch flexible Nutzung („Saisonkennzeichen-Effekt“) vielleicht mehr lohnt.
+            Am <strong>14. Februar 2026</strong> endet voraussichtlich weltweit die Option, FSD einmalig zu kaufen.
+            In Deutschland gibt es das Abo aktuell noch nicht – es wird aber als Nachfolger erwartet.
+            Dieser Rechner vergleicht deine <strong>letzte Kauf-Chance</strong> gegen das kommende Abo-Modell.
         </p>
     </section>
 
@@ -74,20 +75,20 @@
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <div class="text-sm font-semibold text-gray-500 uppercase">Aktueller Kaufpreis</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">7.500 €</div>
-            <div class="mt-1 text-xs text-gray-500">Volles Potenzial für autonomes Fahren</div>
+            <div class="mt-1 text-xs text-gray-500">Nur noch bis 14.02. verfügbar!</div>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div class="text-sm font-semibold text-gray-500 uppercase">Est. Abo-Preis (Monat)</div>
+            <div class="text-sm font-semibold text-gray-500 uppercase">Erwarteter Abo-Preis</div>
             <div class="mt-2 text-3xl font-bold text-[#e82127]">99 € - 199 €</div>
-            <div class="mt-1 text-xs text-gray-500">Abhängig von Marktpreisanpassungen</div>
+            <div class="mt-1 text-xs text-gray-500">Schätzung basierend auf US-Preisen ($99)</div>
         </div>
     </section>
 
     <section class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div class="p-6 md:p-8 border-b border-gray-100">
-            <h3 class="text-2xl font-bold text-gray-900">Deine finanzielle Break-Even Analyse</h3>
+            <h3 class="text-2xl font-bold text-gray-900">Deine finanzielle Wette auf die Zukunft</h3>
             <p class="mt-2 text-gray-600">
-                Simuliere deine Haltedauer, die Abo-Kosten und <strong>deine jährliche Nutzung</strong>.
+                Lohnt es sich, jetzt noch schnell 7.500 € zu "locken", oder fährst du mit dem kommenden Abo günstiger?
             </p>
         </div>
 
@@ -110,7 +111,7 @@
                     </label>
                     <input type="range" id="usageMonths" min="1" max="12" value="12" step="1" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
                     <p class="text-xs text-gray-500 mt-2 leading-snug">
-                        Zahlst du durchgehend oder pausierst du (z.B. im Winter)? Weniger Monate = Späterer Break-Even.
+                        Mit Abo könntest du pausieren (Saisonkennzeichen-Effekt). Beim Kauf zahlst du immer voll.
                     </p>
                 </div>
 
@@ -147,10 +148,10 @@
 
         <div class="flex space-x-4 mb-8">
             <button id="btn-buy" class="flex-1 py-3 px-6 rounded-lg font-semibold bg-[#e82127] text-white shadow-md transition-all">
-                Perspektive: Sofortkauf
+                Perspektive: Jetzt Kaufen (bis 14.02.)
             </button>
             <button id="btn-sub" class="flex-1 py-3 px-6 rounded-lg font-semibold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-all">
-                Perspektive: Abonnement
+                Perspektive: Warten auf Abo
             </button>
         </div>
 
@@ -184,7 +185,7 @@
             </div>
 
             <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-400 transition-colors">
-                <h4 class="text-xl font-bold text-blue-400 mb-4 uppercase tracking-wide">Typ "Abonnent"</h4>
+                <h4 class="text-xl font-bold text-blue-400 mb-4 uppercase tracking-wide">Typ "Abonnent" (Warten)</h4>
                 <ul class="space-y-3 text-gray-300 text-sm">
                     <li class="flex items-start gap-2">
                         <span class="text-green-500 mt-0.5">✔</span>
@@ -224,7 +225,7 @@
 <footer class="bg-gray-900 text-white py-12 mt-12 border-t border-gray-800">
     <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
         <p class="text-gray-400 text-sm">
-            Diese Anwendung dient deiner Information. Keine Finanzberatung. Stand Q1 2026.
+            Diese Anwendung dient deiner Information. Keine Finanzberatung. Stand 27/1/2026.
         </p>
         <p class="text-gray-500 text-xs">
             Entwickelt für die Community von <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="text-[#e82127] hover:underline">TeslaTobi</a>.
@@ -243,6 +244,11 @@
 
     const prosConsData = {
         buy: [
+            { 
+                title: "Letzte Chance!", 
+                text: "Die Kaufoption endet voraussichtlich am 14. Februar. Wenn du eine dauerhafte Lizenz willst, musst du jetzt handeln.", 
+                type: "alert" 
+            },
             { 
                 title: "Inflationsschutz & Rentabilität", 
                 text: "Du sicherst dir den heutigen Preis. Lohnt sich aber meist nur, wenn du FSD wirklich das ganze Jahr über intensiv nutzt.", 
@@ -281,7 +287,7 @@
         ],
         sub: [
             { title: "Der Saison-Joker (Flexibilität)", text: "Der größte Vorteil: Nutzt du FSD nur im Sommer (6 Monate), sparst du 50% der Kosten. Der Break-Even verschiebt sich oft auf über 10 Jahre.", type: "pro" },
-            { title: "UNECE-Hedge", text: "Solange die EU-Regulierungen das echte FSD noch blockieren, sparst du dir die Gebühr. Du zahlst erst, wenn es legal nutzbar ist.", type: "pro" },
+            { title: "UNECE-Hedge", text: "Solange die EU-Regulierungen das echte FSD noch blockieren, sparst du dir die Gebühr (sobald das Abo in DE verfügbar ist).", type: "pro" },
             { title: "Psychologie: „Pain of Paying“", text: "Der Nachteil: Du siehst jeden Monat die Abbuchung. Bei schlechten Updates ärgerst du dich mehr, als wenn es schon bezahlt wäre.", type: "con" },
             { title: "Preisrisiko", text: "Tesla kann deine monatliche Gebühr jederzeit erhöhen, sobald die Software leistungsfähiger wird.", type: "con" }
         ]
