@@ -48,14 +48,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <div>
             <h1 class="text-xl font-bold tracking-tight text-gray-900 leading-tight">
-                <span class="text-[#e82127]">Tesla FSD Kaufen - Pros und Cons</span>
+                <span class="text-[#e82127]">Tesla FSD</span> Entscheidungshilfe
             </h1>
             <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="text-xs font-medium text-gray-500 hover:text-[#e82127] transition-colors">
                 by TeslaTobi 📺
             </a>
         </div>
         <div class="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-            Deadline: 14. Februar 2026
+            Deadline: 14. Februar
         </div>
     </div>
 </header>
@@ -63,7 +63,7 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
     <section class="text-center space-y-4">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Tesla FSD - Jetzt noch schnell kaufen?</h2>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">FSD: Kaufen oder Abonnieren?</h2>
         <p class="max-w-2xl mx-auto text-lg text-gray-600">
             Am <strong>14. Februar 2026</strong> endet voraussichtlich weltweit die Option, FSD einmalig zu kaufen.
             In Deutschland gibt es das Abo aktuell noch nicht – es wird aber als Nachfolger erwartet.
@@ -111,8 +111,14 @@
                     </label>
                     <input type="range" id="usageMonths" min="1" max="12" value="12" step="1" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
                     <p class="text-xs text-gray-500 mt-2 leading-snug">
-                        Mit Abo könntest du pausieren (Saisonkennzeichen-Effekt). Beim Kauf zahlst du immer voll.
+                        Mit Abo kannst du pausieren. Beim Kauf zahlst du immer voll, nutzt es aber evtl. auch nicht (z.B. Winter).
                     </p>
+                </div>
+
+                <div>
+                    <label for="insuranceSavings" class="block text-sm font-medium text-gray-700">Versicherungs-Ersparnis (Monat): <span id="insuranceVal" class="font-bold text-green-600">0 €</span></label>
+                    <input type="range" id="insuranceSavings" min="0" max="200" value="0" step="10" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <p class="text-xs text-gray-500 mt-1">Rabatt gibt es nur bei aktiver Nutzung (Telematik) – gilt also für beide gleich, basierend auf deiner Nutzung.</p>
                 </div>
 
                 <div>
@@ -132,7 +138,7 @@
                     <canvas id="financialChart"></canvas>
                 </div>
                 <p class="text-xs text-center text-gray-400 mt-4">
-                    *Die rote Linie zeigt die effektiven Kosten (Kaufpreis minus erwarteter Restwert).
+                    *Die rote Linie sinkt, da der Restwert und Versicherungseinsparungen (bei Nutzung) die effektiven Kosten senken.
                 </p>
             </div>
         </div>
@@ -249,7 +255,8 @@
         monthlySub: 150, 
         years: 5, 
         resalePercent: 20,
-        usageMonths: 12 // Default: Full year usage
+        usageMonths: 12,
+        insuranceSavings: 0 
     };
 
     const prosConsData = {
@@ -308,11 +315,13 @@
     const sliderCost = document.getElementById('subscriptionCost');
     const sliderResale = document.getElementById('resaleValue');
     const sliderUsage = document.getElementById('usageMonths');
+    const sliderInsurance = document.getElementById('insuranceSavings'); 
 
     const labelYears = document.getElementById('yearsVal');
     const labelCost = document.getElementById('subCostVal');
     const labelResale = document.getElementById('resaleVal');
     const labelUsage = document.getElementById('usageVal');
+    const labelInsurance = document.getElementById('insuranceVal');
 
     const breakEvenDisplay = document.getElementById('breakEvenResult');
     const btnBuy = document.getElementById('btn-buy');
@@ -321,22 +330,31 @@
 
     let financialChartInstance = null;
 
-    function calculateBreakEven(price, monthly, resaleRate, usagePerYear) {
-        // Effective Cost of Buying (Price - Resale Value)
-        const effectiveBuyCost = price * (1 - (resaleRate / 100));
+    function calculateBreakEven(price, monthly, resaleRate, usagePerYear, insuranceSaving) {
+        const effectiveBuyPrice = price * (1 - (resaleRate / 100));
+        let buyerCost = effectiveBuyPrice;
+        let subCost = 0;
         
-        // Annual Cost of Subscription
-        const annualSubCost = monthly * usagePerYear;
+        // Simulating up to 20 years (240 months)
+        for(let m = 1; m <= 240; m++) {
+            const activeRatio = usagePerYear / 12;
 
-        // Years to Break Even
-        const yearsToBreakEven = effectiveBuyCost / annualSubCost;
-        
-        // Convert to Years and Months for display
-        const years = Math.floor(yearsToBreakEven);
-        const months = Math.round((yearsToBreakEven - years) * 12);
+            // Logic: Insurance savings depend on usage for BOTH
+            // Buyer pays 0 monthly fee, but gets insurance savings proportional to usage
+            buyerCost -= (insuranceSaving * activeRatio); 
+            
+            // Sub pays fee & gets insurance savings ONLY proportional to usage
+            // (Monthly - Insurance) * UsageRatio
+            subCost += (monthly - insuranceSaving) * activeRatio;
+            
+            if (subCost > buyerCost) {
+                const years = Math.floor(m / 12);
+                const months = m % 12;
+                return `Nach ${years} Jahren & ${months} Monaten`;
+            }
+        }
 
-        if (years > 20) return "Nie (über 20 Jahre)";
-        return `Nach ${years} Jahren & ${months} Monaten`;
+        return "Nie (über 20 Jahre)";
     }
 
     function updateFinancialChart() {
@@ -344,38 +362,44 @@
         const monthly = parseInt(sliderCost.value);
         const resale = parseInt(sliderResale.value);
         const usage = parseInt(sliderUsage.value);
+        const insurance = parseInt(sliderInsurance.value);
 
         // Update State & Labels
         state.years = years;
         state.monthlySub = monthly;
         state.resalePercent = resale;
         state.usageMonths = usage;
+        state.insuranceSavings = insurance;
 
         labelYears.innerText = years;
         labelCost.innerText = monthly + " €";
         labelResale.innerText = resale + "%";
         labelUsage.innerText = usage;
+        labelInsurance.innerText = insurance + " €";
 
-        // Calculate Effective Buy Cost (Net Cost)
-        const effectiveBuyCost = state.buyPrice * (1 - (resale / 100));
+        // Calculate Effective Buy Cost (Net Cost Start)
+        const startBuyCost = state.buyPrice * (1 - (resale / 100));
 
         // Update Break Even Text
-        breakEvenDisplay.innerText = calculateBreakEven(state.buyPrice, monthly, resale, usage);
+        breakEvenDisplay.innerText = calculateBreakEven(state.buyPrice, monthly, resale, usage, insurance);
 
         // Generate Chart Data
         const labels = [];
         const dataBuy = [];
         const dataSub = [];
         const totalMonths = years * 12;
-
-        // Effective average monthly cost for the chart visualization
-        const effectiveMonthlyAvg = (monthly * usage) / 12;
+        const activeRatio = usage / 12;
 
         for (let i = 0; i <= totalMonths; i += 6) { 
             labels.push(`Monat ${i}`);
-            // FIX: Plot the EFFECTIVE cost (Net TCO) to align with the Break-Even Text
-            dataBuy.push(effectiveBuyCost); 
-            dataSub.push(effectiveMonthlyAvg * i); 
+            
+            // Buyer Logic: Start Price minus Cumulative Insurance Savings (based on usage)
+            const buyerSavings = (insurance * activeRatio) * i;
+            dataBuy.push(startBuyCost - buyerSavings); 
+            
+            // Sub Logic: (Monthly - Insurance) * UsageRatio * Months
+            const subMonthlyNet = (monthly - insurance) * activeRatio;
+            dataSub.push(subMonthlyNet * i); 
         }
 
         financialChartInstance.data.labels = labels;
@@ -434,7 +458,7 @@
                 labels: [],
                 datasets: [
                     { 
-                        label: 'Kauf (abzgl. Restwert)', // Renamed for Clarity
+                        label: 'Kauf (TCO inkl. Rabatte)', 
                         borderColor: '#e82127', 
                         backgroundColor: '#e82127',
                         borderWidth: 3,
@@ -480,6 +504,7 @@
     sliderCost.addEventListener('input', updateFinancialChart);
     sliderResale.addEventListener('input', updateFinancialChart);
     sliderUsage.addEventListener('input', updateFinancialChart); 
+    sliderInsurance.addEventListener('input', updateFinancialChart); 
 
     btnBuy.addEventListener('click', () => renderProsCons('buy'));
     btnSub.addEventListener('click', () => renderProsCons('sub'));
