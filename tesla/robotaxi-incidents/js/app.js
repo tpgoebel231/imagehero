@@ -1,7 +1,7 @@
 /* js/app.js */
 
 // --- Configuration ---
-const DATA_URL = 'incidents.json';
+const DATA_URL = 'data/incidents.json';
 
 // Since specific lat/lng data is redacted in the source CSV, 
 // we use hardcoded centers for the major operating cities to plot clusters.
