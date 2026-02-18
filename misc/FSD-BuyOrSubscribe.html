@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla FSD: Buy vs. Subscribe - Your Decision Tool</title>
+    
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23e82127'/%3E%3Cpath fill='white' d='M16,8.5c-0.8,0-1.5,0.6-1.5,1.4c0,0.1,0,0.1,0,0.2l-1.8,5.4c-0.1,0.3-0.4,0.5-0.7,0.5H6.4c-0.5,0-0.9,0.4-1,0.9L4.1,21c-0.1,0.5,0.3,1,0.9,1h22c0.5,0,0.9-0.4,1-0.9l-1.3-4.1c-0.1-0.5-0.5-0.9-1-0.9H20c-0.3,0-0.6-0.2-0.7-0.5l-1.8-5.4c0-0.1,0-0.1,0-0.2C17.5,9.1,16.8,8.5,16,8.5z M8.5,20c-0.8,0-1.5-0.7-1.5-1.5S7.7,17,8.5,17s1.5,0.7,1.5,1.5S9.3,20,8.5,20z M23.5,20c-0.8,0-1.5-0.7-1.5-1.5s0.7-1.5,1.5-1.5s1.5,0.7,1.5,1.5S24.3,20,23.5,20z'/%3E%3C/svg%3E" type="image/svg+xml" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container { height: 250px; }
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #1f2937;
+        }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #e82127;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #e82127;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-gray-900 leading-tight">
+                <span class="text-[#e82127]">Tesla FSD</span> Decision Tool
+            </h1>
+            <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="text-xs font-medium text-gray-500 hover:text-[#e82127] transition-colors">
+                by TeslaTobi 📺
+            </a>
+        </div>
+        <div class="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            Deadline: Feb 14
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <section class="text-center space-y-4">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">FSD: Buy or Subscribe?</h2>
+        <p class="max-w-2xl mx-auto text-lg text-gray-600">
+            On <strong>February 14, 2026</strong>, Tesla will stop selling FSD as a one-time purchase.
+            After that, it will only be available as a monthly subscription.
+            This calculator compares your <strong>last chance to buy</strong> vs. the subscription model.
+        </p>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div class="text-sm font-semibold text-gray-500 uppercase">Current Purchase Price</div>
+            <div class="mt-2 text-3xl font-bold text-gray-900">$8,000</div>
+            <div class="mt-1 text-xs text-gray-500">Only available until Feb 14!</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div class="text-sm font-semibold text-gray-500 uppercase">Subscription Price</div>
+            <div class="mt-2 text-3xl font-bold text-[#e82127]">$99 - $199+</div>
+            <div class="mt-1 text-xs text-gray-500">Current price $99 (subject to increase)</div>
+        </div>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="p-6 md:p-8 border-b border-gray-100">
+            <h3 class="text-2xl font-bold text-gray-900">Financial Break-Even Analysis</h3>
+            <p class="mt-2 text-gray-600">
+                Is it worth locking in $8,000 now, or will the subscription be cheaper for your usage pattern?
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 md:p-8">
+            <div class="space-y-8 bg-gray-50 p-6 rounded-xl h-fit">
+                
+                <div>
+                    <label for="ownershipYears" class="block text-sm font-medium text-gray-700">Ownership Duration (Years): <span id="yearsVal" class="font-bold text-[#e82127]">5</span></label>
+                    <input type="range" id="ownershipYears" min="1" max="10" value="5" step="1" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                </div>
+
+                <div>
+                    <label for="subscriptionCost" class="block text-sm font-medium text-gray-700">Estimated Subscription (Monthly): <span id="subCostVal" class="font-bold text-[#e82127]">$99</span></label>
+                    <input type="range" id="subscriptionCost" min="49" max="299" value="99" step="10" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                </div>
+
+                <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <label for="usageMonths" class="block text-sm font-bold text-gray-900">
+                        Usage per Year (Months): <span id="usageVal" class="text-[#e82127]">12</span>
+                    </label>
+                    <input type="range" id="usageMonths" min="1" max="12" value="12" step="1" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <p class="text-xs text-gray-500 mt-2 leading-snug">
+                        Subscribers can pause. Buyers pay upfront regardless of usage (e.g., travel/winter).
+                    </p>
+                </div>
+
+                <div>
+                    <label for="insuranceSavings" class="block text-sm font-medium text-gray-700">Insurance Savings (Monthly): <span id="insuranceVal" class="font-bold text-green-600">$0</span></label>
+                    <input type="range" id="insuranceSavings" min="0" max="200" value="0" step="10" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <p class="text-xs text-gray-500 mt-1">Discounts (e.g., Lemonade, Tesla Insurance) often apply only when FSD is actively used.</p>
+                </div>
+
+                <div>
+                    <label for="resaleValue" class="block text-sm font-medium text-gray-700">FSD Resale Value (%): <span id="resaleVal" class="font-bold text-[#e82127]">20%</span></label>
+                    <input type="range" id="resaleValue" min="0" max="50" value="20" step="5" class="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <p class="text-xs text-gray-500 mt-1">How much will the used car market value the software later?</p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <div class="text-sm text-gray-600">Break-Even Point:</div>
+                    <div id="breakEvenResult" class="text-xl font-bold text-gray-900 mt-1">After 5 Years & 4 Months</div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 flex flex-col items-center justify-center bg-white rounded-xl border border-gray-100 p-4">
+                 <div class="chart-container">
+                    <canvas id="financialChart"></canvas>
+                </div>
+                <p class="text-xs text-center text-gray-400 mt-4">
+                    *The red line drops over time as resale value and potential insurance savings (when used) lower the effective cost.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Strategic Considerations</h3>
+            <p class="mt-2 text-gray-600">
+                Choose a perspective to weigh the pros and cons:
+            </p>
+        </div>
+
+        <div class="flex space-x-4 mb-8">
+            <button id="btn-buy" class="flex-1 py-3 px-6 rounded-lg font-semibold bg-[#e82127] text-white shadow-md transition-all">
+                Perspective: Buy Now (Before Feb 14)
+            </button>
+            <button id="btn-sub" class="flex-1 py-3 px-6 rounded-lg font-semibold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-all">
+                Perspective: Subscribe Later
+            </button>
+        </div>
+
+        <div id="prosConsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>
+    </section>
+
+    <section class="bg-gray-900 text-white rounded-2xl p-8 shadow-xl">
+        <h3 class="text-2xl font-bold mb-6 text-center">Summary: Your Roadmap</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 hover:border-[#e82127] transition-colors">
+                <h4 class="text-xl font-bold text-[#e82127] mb-4 uppercase tracking-wide">Type "The Buyer"</h4>
+                <ul class="space-y-3 text-gray-300 text-sm">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You plan to keep the car for <b>6+ years</b>.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You want "peace of mind" and hate monthly micro-decisions (Psychology).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You believe FSD subscription prices will skyrocket (Inflation Hedge).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You use FSD year-round (commute & road trips).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-400 transition-colors">
+                <h4 class="text-xl font-bold text-blue-400 mb-4 uppercase tracking-wide">Type "The Subscriber"</h4>
+                <ul class="space-y-3 text-gray-300 text-sm">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You lease or switch cars every <b>3-4 years</b>.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You worry about Hardware 3 (HW3) obsolescence.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You want the flexibility to pause during low-usage months (Seasonal/Snowbirds).</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-500 mt-0.5">✔</span>
+                        <span>You prefer liquidity ($8k invested in ETFs/Stocks).</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="max-w-2xl mx-auto mt-12 text-center bg-blue-50 rounded-xl border border-blue-100 shadow-sm p-6">
+        <h4 class="text-lg font-bold text-gray-900 mb-2">Planning to buy a new Tesla?</h4>
+        <p class="text-sm text-gray-600 mb-4 px-4">
+            Use my referral link to get <strong>$1,000 off</strong> your new Model S, 3, X, or Y.
+        </p>
+        <a href="https://ts.la/tobias53561" target="_blank" class="inline-flex items-center gap-2 text-[#e82127] font-bold text-lg hover:underline transition-all">
+            👉 Click here for $1,000 discount
+        </a>
+    </section>
+
+    <section class="text-center py-8">
+        <p class="text-gray-600 mb-4">
+            Want more details and my personal take on the FSD situation?
+        </p>
+        <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#ff0000] text-white font-bold hover:bg-red-700 transition-all shadow-md">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            Visit TeslaTobi Channel
+        </a>
+    </section>
+
+</main>
+
+<footer class="bg-gray-900 text-white py-12 mt-12 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
+        <p class="text-gray-400 text-sm">
+            For informational purposes only. Not financial advice. Updated Jan 27, 2026.
+        </p>
+        <p class="text-gray-500 text-xs">
+            Developed with ⚡ for the community by <a href="https://www.youtube.com/@TeslaTobi" target="_blank" class="text-[#e82127] hover:underline">TeslaTobi</a>.
+        </p>
+    </div>
+</footer>
+
+<script>
+    // Updated default state for US
+    const state = { 
+        buyPrice: 8000, 
+        monthlySub: 99, 
+        years: 5, 
+        resalePercent: 20,
+        usageMonths: 12,
+        insuranceSavings: 0 
+    };
+
+    const prosConsData = {
+        buy: [
+            { 
+                title: "Last Chance!", 
+                text: "The purchase option ends on Feb 14. If you want a 'lifetime license' for this car, you must act now.", 
+                type: "alert" 
+            },
+            { 
+                title: "Inflation Hedge & ROI", 
+                text: "You lock in today's price. If subscriptions rise to $199 or more, you win big in the long run.", 
+                type: "pro" 
+            },
+            { 
+                title: "Psychology: 'Peace of Mind'", 
+                text: "Sunk Cost Effect: Once paid, it feels free. You enjoy every update without questioning the monthly fee.", 
+                type: "pro" 
+            },
+            { 
+                title: "⚠️ Insurance Trap", 
+                text: "If buying later, it's an 'add-on'—make sure to cover it! Also, if totaled, insurance pays market value (depreciated), not the full $8k.", 
+                type: "alert" 
+            },
+            { 
+                title: "Supervised vs. Unsupervised", 
+                text: "You are buying the 'capability'. If true driverless FSD (Tesla liability) arrives, it might cost extra or require a different commercial license.", 
+                type: "con" 
+            },
+            { 
+                title: "Hardware Risk (HW3 vs. AI4)", 
+                text: "Legacy risk: If unsupervised FSD eventually requires AI4, your $8k software might be stuck on 'Supervised' forever on older cars.", 
+                type: "con" 
+            },
+            { 
+                title: "Opportunity Cost", 
+                text: "$8,000 is tied up. Invested in SPY or TSLA, that money could have grown significantly over 5 years.", 
+                type: "con" 
+            }
+        ],
+        sub: [
+            { title: "Flexibility (Snowbirds/Travel)", text: "Only pay when you need it. Skip winter months or months where you don't travel. Huge savings potential.", type: "pro" },
+            { title: "Technology Hedge", text: "If FSD progress stalls or your car's hardware becomes obsolete, you can just cancel. No $8k risk.", type: "pro" },
+            { title: "Psychology: 'Pain of Paying'", text: "Downside: You see the charge every month. A buggy update feels like a 'waste of money' and causes frustration.", type: "con" },
+            { title: "Price Risk", text: "Tesla can raise the monthly fee at any time as features improve. You are exposed to inflation.", type: "con" }
+        ]
+    };
+
+    // DOM Elements
+    const sliderYears = document.getElementById('ownershipYears');
+    const sliderCost = document.getElementById('subscriptionCost');
+    const sliderResale = document.getElementById('resaleValue');
+    const sliderUsage = document.getElementById('usageMonths');
+    const sliderInsurance = document.getElementById('insuranceSavings'); 
+
+    const labelYears = document.getElementById('yearsVal');
+    const labelCost = document.getElementById('subCostVal');
+    const labelResale = document.getElementById('resaleVal');
+    const labelUsage = document.getElementById('usageVal');
+    const labelInsurance = document.getElementById('insuranceVal');
+
+    const breakEvenDisplay = document.getElementById('breakEvenResult');
+    const btnBuy = document.getElementById('btn-buy');
+    const btnSub = document.getElementById('btn-sub');
+    const pcContainer = document.getElementById('prosConsContainer');
+
+    let financialChartInstance = null;
+
+    function calculateBreakEven(price, monthly, resaleRate, usagePerYear, insuranceSaving) {
+        const effectiveBuyPrice = price * (1 - (resaleRate / 100));
+        let buyerCost = effectiveBuyPrice;
+        let subCost = 0;
+        
+        // Simulating up to 20 years (240 months)
+        for(let m = 1; m <= 240; m++) {
+            const activeRatio = usagePerYear / 12;
+
+            // Logic: Insurance savings depend on usage for BOTH
+            buyerCost -= (insuranceSaving * activeRatio); 
+            
+            // Sub pays fee & gets insurance savings ONLY proportional to usage
+            subCost += (monthly - insuranceSaving) * activeRatio;
+            
+            if (subCost > buyerCost) {
+                const years = Math.floor(m / 12);
+                const months = m % 12;
+                return `After ${years} Years & ${months} Months`;
+            }
+        }
+
+        return "Never (over 20 years)";
+    }
+
+    function updateFinancialChart() {
+        const years = parseInt(sliderYears.value);
+        const monthly = parseInt(sliderCost.value);
+        const resale = parseInt(sliderResale.value);
+        const usage = parseInt(sliderUsage.value);
+        const insurance = parseInt(sliderInsurance.value);
+
+        // Update State & Labels
+        state.years = years;
+        state.monthlySub = monthly;
+        state.resalePercent = resale;
+        state.usageMonths = usage;
+        state.insuranceSavings = insurance;
+
+        labelYears.innerText = years;
+        labelCost.innerText = "$" + monthly;
+        labelResale.innerText = resale + "%";
+        labelUsage.innerText = usage;
+        labelInsurance.innerText = "$" + insurance;
+
+        // Calculate Effective Buy Cost (Net Cost Start)
+        const startBuyCost = state.buyPrice * (1 - (resale / 100));
+
+        // Update Break Even Text
+        breakEvenDisplay.innerText = calculateBreakEven(state.buyPrice, monthly, resale, usage, insurance);
+
+        // Generate Chart Data
+        const labels = [];
+        const dataBuy = [];
+        const dataSub = [];
+        const totalMonths = years * 12;
+        const activeRatio = usage / 12;
+
+        for (let i = 0; i <= totalMonths; i += 6) { 
+            labels.push(`Month ${i}`);
+            
+            // Buyer Logic
+            const buyerSavings = (insurance * activeRatio) * i;
+            dataBuy.push(startBuyCost - buyerSavings); 
+            
+            // Sub Logic
+            const subMonthlyNet = (monthly - insurance) * activeRatio;
+            dataSub.push(subMonthlyNet * i); 
+        }
+
+        financialChartInstance.data.labels = labels;
+        financialChartInstance.data.datasets[0].data = dataBuy;
+        financialChartInstance.data.datasets[1].data = dataSub;
+        financialChartInstance.update();
+    }
+
+    function renderProsCons(mode) {
+        pcContainer.innerHTML = '';
+        const data = mode === 'buy' ? prosConsData.buy : prosConsData.sub;
+        btnBuy.className = mode === 'buy' ? "flex-1 py-3 px-6 rounded-lg font-semibold bg-[#e82127] text-white shadow-md" : "flex-1 py-3 px-6 rounded-lg font-semibold bg-white text-gray-700 border border-gray-300";
+        btnSub.className = mode === 'sub' ? "flex-1 py-3 px-6 rounded-lg font-semibold bg-[#64748b] text-white shadow-md" : "flex-1 py-3 px-6 rounded-lg font-semibold bg-white text-gray-700 border border-gray-300";
+
+        data.forEach(item => {
+            const card = document.createElement('div');
+            let borderClass = 'border-gray-300';
+            let icon = 'ℹ️';
+            let bgClass = 'bg-white';
+
+            if(item.type === 'pro') {
+                borderClass = 'border-green-500';
+                icon = '✅';
+                bgClass = 'bg-green-50/10';
+            } else if (item.type === 'con') {
+                borderClass = 'border-red-500';
+                icon = '❌'; 
+                bgClass = 'bg-red-50/10';
+            } else if (item.type === 'alert') {
+                borderClass = 'border-yellow-500';
+                icon = '⚠️';
+                bgClass = 'bg-yellow-50 border-2'; 
+            }
+
+            card.className = `p-5 rounded-xl border-l-4 shadow-sm ${bgClass} ${borderClass}`;
+            const titleClass = item.type === 'alert' ? 'text-red-700 font-extrabold uppercase tracking-wide' : 'font-bold text-gray-900';
+
+            card.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="text-xl">${icon}</span>
+                    <div>
+                        <h4 class="${titleClass}">${item.title}</h4>
+                        <p class="text-sm text-gray-700 mt-1 leading-relaxed">${item.text}</p>
+                    </div>
+                </div>
+            `;
+            pcContainer.appendChild(card);
+        });
+    }
+
+    function initCharts() {
+        const ctx = document.getElementById('financialChart').getContext('2d');
+        financialChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { 
+                labels: [],
+                datasets: [
+                    { 
+                        label: 'Buy (TCO incl. Resale/Savings)', 
+                        borderColor: '#e82127', 
+                        backgroundColor: '#e82127',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        data: [] 
+                    }, 
+                    { 
+                        label: 'Subscribe (Cumulative)', 
+                        borderColor: '#64748b', 
+                        backgroundColor: '#64748b',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        data: [] 
+                    }
+                ] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                interaction: { mode: 'index', intersect: false },
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + Math.round(context.raw).toLocaleString('en-US');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return '$' + value; } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Event Listeners
+    sliderYears.addEventListener('input', updateFinancialChart);
+    sliderCost.addEventListener('input', updateFinancialChart);
+    sliderResale.addEventListener('input', updateFinancialChart);
+    sliderUsage.addEventListener('input', updateFinancialChart); 
+    sliderInsurance.addEventListener('input', updateFinancialChart); 
+
+    btnBuy.addEventListener('click', () => renderProsCons('buy'));
+    btnSub.addEventListener('click', () => renderProsCons('sub'));
+
+    window.addEventListener('load', () => { 
+        initCharts(); 
+        updateFinancialChart(); 
+        renderProsCons('buy'); 
+    });
+</script>
+</body>
+</html>

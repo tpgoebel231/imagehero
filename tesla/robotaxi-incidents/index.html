@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADS Incident Tracker: Waymo vs. Tesla</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        .redacted-bar {
+            background-color: #000;
+            color: #000;
+            user-select: none;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .waymo-card { border-left: 4px solid #3B82F6; }
+        .tesla-card { border-left: 4px solid #EF4444; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">ADS Incident Tracker</h1>
+            <p class="text-gray-600">Comparing Unsupervised Deployments (Waymo vs. Tesla)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-6 rounded shadow">
+                <h3 class="text-gray-500 text-sm uppercase">Total Incidents</h3>
+                <p class="text-4xl font-bold" id="total-count">-</p>
+            </div>
+            <div class="bg-white p-6 rounded shadow border-l-4 border-blue-500">
+                <h3 class="text-gray-500 text-sm uppercase">Waymo Reports</h3>
+                <p class="text-4xl font-bold" id="waymo-count">-</p>
+            </div>
+            <div class="bg-white p-6 rounded shadow border-l-4 border-red-500">
+                <h3 class="text-gray-500 text-sm uppercase">Tesla Reports</h3>
+                <p class="text-4xl font-bold" id="tesla-count">-</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white p-6 rounded shadow">
+                <h3 class="font-bold mb-4">Incidents by City (Top 10)</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded shadow">
+                <h3 class="font-bold mb-4">Collision Partners ("Who did they hit?")</h3>
+                <canvas id="crashChart"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1">
+                <div class="bg-white p-4 rounded shadow sticky top-4">
+                    <h3 class="font-bold mb-2">Geographic Distribution</h3>
+                    <div id="map" style="height: 400px;" class="rounded bg-gray-200"></div>
+                    <p class="text-xs text-gray-500 mt-2">*Locations aggregated by City (Raw coordinates redacted by source).</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-xl">Incident Feed</h3>
+                        <input type="text" id="search" placeholder="Search narratives..." class="border p-2 rounded text-sm w-64">
+                    </div>
+                    <div id="incident-list" class="space-y-4 max-h-screen overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Hardcoded City Coordinates (Since data is redacted) ---
+        const cityCoords = {
+            "San Francisco": [37.7749, -122.4194],
+            "Phoenix": [33.4484, -112.0740],
+            "Los Angeles": [34.0522, -118.2437],
+            "Austin": [30.2672, -97.7431],
+            "Atlanta": [33.7490, -84.3880],
+            "Tempe": [33.4255, -111.9400],
+            "Chandler": [33.3062, -111.8413],
+            "Scottsdale": [33.4942, -111.9261],
+            "Palo Alto": [37.4419, -122.1430],
+            "Miami": [25.7617, -80.1918],
+            "Orlando": [28.5383, -81.3792],
+            "Washington": [38.9072, -77.0369],
+            "Dallas": [32.7767, -96.7970],
+            "Mountain View": [37.3861, -122.0839]
+        };
+
+        // --- 2. Initialize Map ---
+        const map = L.map('map').setView([37.0902, -95.7129], 3); // US View
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // --- 3. Load Data ---
+        fetch('incidents.json')
+            .then(response => response.json())
+            .then(data => {
+                initDashboard(data);
+            });
+
+        function initDashboard(data) {
+            // Stats
+            document.getElementById('total-count').textContent = data.length;
+            document.getElementById('waymo-count').textContent = data.filter(d => d.entity.includes('Waymo')).length;
+            document.getElementById('tesla-count').textContent = data.filter(d => d.entity.includes('Tesla')).length;
+
+            // Render List
+            renderList(data);
+            
+            // Render Map Markers
+            renderMap(data);
+
+            // Render Charts
+            renderCharts(data);
+
+            // Search Filter
+            document.getElementById('search').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = data.filter(d => 
+                    d.narrative.toLowerCase().includes(term) || 
+                    d.city.toLowerCase().includes(term) ||
+                    d.crash_with.toLowerCase().includes(term)
+                );
+                renderList(filtered);
+            });
+        }
+
+        function renderMap(data) {
+            // Group count by city
+            const cityCounts = {};
+            data.forEach(d => {
+                if (cityCounts[d.city]) cityCounts[d.city]++;
+                else cityCounts[d.city] = 1;
+            });
+
+            // Add markers
+            Object.keys(cityCounts).forEach(city => {
+                if (cityCoords[city]) {
+                    const count = cityCounts[city];
+                    const size = Math.min(50, 20 + count / 5); // Dynamic size
+                    
+                    const icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color:rgba(59, 130, 246, 0.7); width:${size}px; height:${size}px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; border:2px solid white;">${count}</div>`,
+                        iconSize: [size, size],
+                        iconAnchor: [size/2, size/2]
+                    });
+
+                    L.marker(cityCoords[city], {icon: icon})
+                        .addTo(map)
+                        .bindPopup(`<b>${city}</b><br>${count} incidents reported`);
+                }
+            });
+        }
+
+        function renderCharts(data) {
+            // Chart 1: Top Cities
+            const cityCounts = {};
+            data.forEach(d => cityCounts[d.city] = (cityCounts[d.city] || 0) + 1);
+            const sortedCities = Object.entries(cityCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            
+            new Chart(document.getElementById('cityChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedCities.map(x => x[0]),
+                    datasets: [{
+                        label: 'Incidents',
+                        data: sortedCities.map(x => x[1]),
+                        backgroundColor: '#3B82F6'
+                    }]
+                }
+            });
+
+            // Chart 2: Crash Partners
+            const crashCounts = {};
+            data.forEach(d => crashCounts[d.crash_with] = (crashCounts[d.crash_with] || 0) + 1);
+            const sortedCrash = Object.entries(crashCounts).sort((a,b) => b[1] - a[1]).slice(0, 6); // Top 6
+
+            new Chart(document.getElementById('crashChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sortedCrash.map(x => x[0]),
+                    datasets: [{
+                        data: sortedCrash.map(x => x[1]),
+                        backgroundColor: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6']
+                    }]
+                }
+            });
+        }
+
+        function renderList(data) {
+            const listEl = document.getElementById('incident-list');
+            listEl.innerHTML = '';
+
+            data.forEach(item => {
+                const isTesla = item.entity.includes('Tesla');
+                const borderClass = isTesla ? 'tesla-card' : 'waymo-card';
+                const badgeColor = isTesla ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';
+                
+                // Redaction styling
+                let narrativeHtml = `<p class="text-gray-700 mt-2 text-sm">${item.narrative}</p>`;
+                if (item.redacted) {
+                    narrativeHtml = `
+                        <div class="bg-gray-50 p-3 rounded mt-2 border border-gray-200">
+                            <p class="text-sm font-bold text-gray-800 mb-1">REDACTED BY MANUFACTURER</p>
+                            <p class="text-gray-600 text-sm italic">${item.narrative.replace('REDACTED BY MANUFACTURER.', '')}</p>
+                            <div class="mt-2">
+                                <span class="redacted-bar">████████████████</span>
+                                <span class="redacted-bar">█████████</span>
+                                <span class="redacted-bar">████████████</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const card = document.createElement('div');
+                card.className = `p-4 bg-white border rounded shadow-sm hover:shadow-md transition-shadow ${borderClass}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold uppercase ${badgeColor} px-2 py-1 rounded">${item.entity}</span>
+                            <span class="text-xs text-gray-500 ml-2">${item.date} • ${item.city}, ${item.state}</span>
+                        </div>
+                        <span class="text-xs font-semibold bg-gray-100 px-2 py-1 rounded">${item.severity}</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-xs font-mono bg-gray-100 p-1 rounded">Mvmt: ${item.movement}</span>
+                        <span class="text-xs font-mono bg-gray-100 p-1 rounded ml-1">Hit: ${item.crash_with}</span>
+                    </div>
+                    ${narrativeHtml}
+                `;
+                listEl.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
