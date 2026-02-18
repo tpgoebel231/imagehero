@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 def update_data():
-    input_file = 'SGO-2021-01_ADS.csv'
+    input_file = 'SGO-2021-01_Incident_Reports_ADS.csv'
     output_file = 'incidents.json'
 
     # Read and filter
