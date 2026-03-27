@@ -132,53 +132,80 @@ function initMap() {
 }
 
 // --- Charts Logic (Chart.js) ---
+// js/app.js
+
 function initCharts() {
-    // -- Chart 1: Incidents by City --
+    // -- Chart 1: Incidents by City (Stacked: Waymo vs Tesla) --
     const cityCtx = document.getElementById('chartCity').getContext('2d');
     
-    // Aggregate Data
-    const cityCounts = {};
-    allData.forEach(d => cityCounts[d.city] = (cityCounts[d.city] || 0) + 1);
+    // 1. Identify Top 10 Cities by Total Volume
+    const totalCounts = {};
+    allData.forEach(d => totalCounts[d.city] = (totalCounts[d.city] || 0) + 1);
     
-    // Sort and Top 10
-    const sortedCities = Object.entries(cityCounts)
-        .sort((a,b) => b[1] - a[1])
+    const topCities = Object.keys(totalCounts)
+        .sort((a,b) => totalCounts[b] - totalCounts[a])
         .slice(0, 10);
 
+    // 2. Build Separate Data Arrays for Waymo and Tesla
+    const waymoData = topCities.map(city => 
+        allData.filter(d => d.city === city && d.entity.includes("Waymo")).length
+    );
+    
+    const teslaData = topCities.map(city => 
+        allData.filter(d => d.city === city && d.entity.includes("Tesla")).length
+    );
+
+    // 3. Create Stacked Bar Chart
     cityChart = new Chart(cityCtx, {
         type: 'bar',
         data: {
-            labels: sortedCities.map(x => x[0]),
-            datasets: [{
-                label: 'Incidents',
-                data: sortedCities.map(x => x[1]),
-                backgroundColor: '#3B82F6', // Tailwind Blue-500
-                borderRadius: 4
-            }]
+            labels: topCities,
+            datasets: [
+                {
+                    label: 'Waymo',
+                    data: waymoData,
+                    backgroundColor: '#3B82F6', // Blue
+                    stack: 'Stack 0'
+                },
+                {
+                    label: 'Tesla',
+                    data: teslaData,
+                    backgroundColor: '#EF4444', // Red
+                    stack: 'Stack 0'
+                }
+            ]
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { position: 'top' }, // Show legend so user knows Red vs Blue
+                tooltip: { mode: 'index', intersect: false }
+            },
             scales: {
-                y: { beginAtZero: true, grid: { display: false } },
-                x: { grid: { display: false } }
+                x: { 
+                    stacked: true, 
+                    grid: { display: false }
+                },
+                y: { 
+                    stacked: true, 
+                    beginAtZero: true,
+                    grid: { display: false }
+                }
             }
         }
     });
 
-    // -- Chart 2: Crash Partners (Who did they hit?) --
+    // -- Chart 2: Crash Partners (Donut) --
+    // (This part remains the same, just keeping it here so you have the full function)
     const crashCtx = document.getElementById('chartCrash').getContext('2d');
     
-    // Aggregate Data
     const crashCounts = {};
     allData.forEach(d => {
         let key = d.crash_with || "Unknown";
-        // Clean up long names
         if(key.includes("Fixed Object")) key = "Fixed Object";
         crashCounts[key] = (crashCounts[key] || 0) + 1;
     });
 
-    // Sort and Top 6
     const sortedCrash = Object.entries(crashCounts)
         .sort((a,b) => b[1] - a[1])
         .slice(0, 6);
