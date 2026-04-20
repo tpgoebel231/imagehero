@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Tesla FSD — Quarterly Pricing Timeline (US)</title>
+<style>
+  :root {
+    --bg: #2c2c2c;
+    --panel: #363636;
+    --ink: #f4ecd8;
+    --ink-dim: #b8aa87;
+    --red: #A11D20;
+    --gold: #DDBB38;
+    --rule: #4a4a4a;
+    --ghost: #5a5a5a;
+    --step: #7a6a3a;   /* muted gold for the step line */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 40px 40px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+  header { max-width: 1620px; margin: 0 auto 26px; }
+  h1 { font-size: 38px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h1 em { font-style: normal; color: var(--gold); }
+  .sub { color: var(--ink-dim); font-size: 17px; max-width: 1080px; line-height: 1.55; }
+  .legend { display: flex; gap: 28px; margin-top: 18px; font-size: 15px; color: var(--ink-dim); flex-wrap: wrap; }
+  .legend .dot { display:inline-block; width: 14px; height: 14px; border-radius: 2px; margin-right: 10px; vertical-align: -2px; }
+
+  .stage {
+    max-width: 1620px; margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 28px 32px 20px;
+    overflow-x: auto;
+  }
+  .stage h2 {
+    font-size: 15px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-dim);
+    margin: 0 0 14px;
+  }
+  svg { display: block; width: 100%; height: auto; min-width: 1400px; }
+
+  footer { max-width: 1620px; margin: 20px auto 0; font-size: 14px; color: var(--ink-dim); line-height: 1.6; }
+  .hl { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tesla FSD — <em>quarterly price timeline (US)</em></h1>
+  <div class="sub">
+    Every quarter from Q4 2016 (FSD launch) to Q2 2026 (purchase option retired). Bars appear only in the quarters a price change actually happened — the gaps show how clustered (and how long the flat stretches) the changes really were.
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:#A11D20"></span>Price increase</span>
+    <span><span class="dot" style="background:#DDBB38"></span>Price cut</span>
+    <span><span class="dot" style="background:#6b6b6b"></span>Introduced / restructured</span>
+    <span><span class="dot" style="background:#000; width:3px; height:16px; border-radius:0; margin-right: 12px; vertical-align: -3px;"></span>Purchase option closed</span>
+    <span><span class="dot" style="background:#7a6a3a;border-radius:8px;height:3px;margin-top:6px"></span>Price level between changes</span>
+  </div>
+</header>
+
+<section class="stage">
+  <h2>One-time FSD purchase price — by quarter</h2>
+  <div id="chart"></div>
+</section>
+
+<footer>
+  <span class="hl">Reading the chart:</span> the dotted step-line connects every quarter at the then-current price. A tall bar means the price changed that quarter; an empty quarter with just the step-line means the price held. Note how quickly changes came in <span class="hl">2019–2020</span>, the long flat run at $15K through <span class="hl">2023</span>, and the roughly two-year stretch at $8K before the purchase option was retired on Feb 14, 2026.
+</footer>
+
+<script>
+// -------- data --------
+const events = {
+  '2016-Q4': [{ price: 3000,  label: 'Oct',    note: 'FSD debut ($3K add-on)', type: 'intro' }],
+  '2019-Q2': [
+    { price: 5000,  label: 'Apr', note: 'AP standard · EAP dropped', type: 'reorg' },
+    { price: 6000,  label: 'May', note: '',                           type: 'up' }
+  ],
+  '2019-Q3': [{ price: 7000,  label: 'Aug',    note: '',                        type: 'up' }],
+  '2020-Q3': [{ price: 8000,  label: 'Jul',    note: '',                        type: 'up' }],
+  '2020-Q4': [{ price: 10000, label: 'Oct',    note: 'FSD Beta (city)',         type: 'up' }],
+  '2022-Q1': [{ price: 12000, label: 'Jan',    note: '',                        type: 'up' }],
+  '2022-Q3': [{ price: 15000, label: 'Sep',    note: 'ALL-TIME PEAK',           type: 'up', peak: true }],
+  '2023-Q3': [{ price: 12000, label: 'Sep',    note: 'first-ever cut',          type: 'down' }],
+  '2024-Q2': [{ price: 8000,  label: 'Apr',    note: '"FSD (Supervised)" rebrand · sub cut to $99', type: 'down' }],
+  '2026-Q1': [{ price: 0,     label: 'Feb 14', note: 'purchase option ends',    type: 'end' }]
+};
+
+// build list of all quarters Q4 2016 → Q2 2026
+function genQuarters() {
+  const list = [];
+  let y = 2016, q = 4;
+  while (y < 2026 || (y === 2026 && q <= 2)) {
+    list.push({ year: y, q, key: `${y}-Q${q}` });
+    q++; if (q > 4) { q = 1; y++; }
+  }
+  return list;
+}
+const quarters = genQuarters();
+
+// -------- layout --------
+const slotW = 38;
+const leftMargin = 86;
+const rightMargin = 24;
+const topMargin = 90;
+const bottomMargin = 130;
+const chartH = 500;              // plot area height for bars
+const maxPrice = 15000;
+
+const width = leftMargin + quarters.length * slotW + rightMargin;
+const height = topMargin + chartH + bottomMargin;
+
+function xCenter(i) { return leftMargin + (i + 0.5) * slotW; }
+function yFor(price) { return topMargin + chartH - (price / maxPrice) * chartH; }
+
+// -------- svg construction --------
+const ns = 'http://www.w3.org/2000/svg';
+const svg = document.createElementNS(ns, 'svg');
+svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+svg.setAttribute('role', 'img');
+svg.setAttribute('aria-label', 'Tesla FSD price by quarter');
+
+function make(tag, attrs = {}, text) {
+  const el = document.createElementNS(ns, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+// gridlines + y axis labels
+const yTicks = [0, 3000, 6000, 9000, 12000, 15000];
+const grid = make('g');
+yTicks.forEach(v => {
+  const y = yFor(v);
+  grid.appendChild(make('line', { x1: leftMargin, x2: width - rightMargin, y1: y, y2: y, stroke: v === 0 ? '#7a7a7a' : '#4a4a4a', 'stroke-width': 1 }));
+  grid.appendChild(make('text', { x: leftMargin - 12, y: y + 5, 'text-anchor': 'end', fill: '#b8aa87', 'font-size': 14, 'font-family': 'inherit' }, v === 0 ? '$0' : `$${v/1000}K`));
+});
+svg.appendChild(grid);
+
+// y-axis title
+svg.appendChild(make('text', { x: leftMargin, y: 46, fill: '#b8aa87', 'font-size': 13, 'letter-spacing': '0.08em' }, 'ONE-TIME PURCHASE PRICE (USD)'));
+
+// build "current price" trajectory for step line (only over purchase-valid range)
+const stepPoints = [];
+let currentPrice = null;
+let ended = false;
+let endPartial = null; // { i, priceBefore } for the quarter where purchase ended
+quarters.forEach((qu, i) => {
+  const ev = events[qu.key];
+  if (ev) {
+    const finalEv = ev[ev.length - 1];
+    if (finalEv.type === 'end') {
+      endPartial = { i, priceBefore: currentPrice };
+      ended = true;
+      currentPrice = null;
+    } else {
+      currentPrice = finalEv.price;
+    }
+  }
+  if (currentPrice != null && !ended) {
+    stepPoints.push({ i, price: currentPrice });
+  }
+});
+
+// draw step line as dotted horizontal segments per quarter
+const stepG = make('g');
+stepPoints.forEach(p => {
+  const x1 = xCenter(p.i) - slotW/2 + 2;
+  const x2 = xCenter(p.i) + slotW/2 - 2;
+  const y = yFor(p.price);
+  stepG.appendChild(make('line', { x1, x2, y1: y, y2: y, stroke: '#7a6a3a', 'stroke-width': 1.5, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' }));
+});
+// connect vertical transitions between quarters at change points (thin gold)
+for (let k = 1; k < stepPoints.length; k++) {
+  const prev = stepPoints[k-1], cur = stepPoints[k];
+  if (cur.i === prev.i + 1 && cur.price !== prev.price) {
+    const x = xCenter(cur.i) - slotW/2 + 2;
+    stepG.appendChild(make('line', { x1: x, x2: x, y1: yFor(prev.price), y2: yFor(cur.price), stroke: '#7a6a3a', 'stroke-width': 1.5, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' }));
+  }
+}
+// partial step for the quarter where purchase ended (Jan 1 → Feb 14, 2026)
+if (endPartial && endPartial.priceBefore != null) {
+  const x1 = xCenter(endPartial.i) - slotW/2 + 2;
+  const x2 = xCenter(endPartial.i);
+  const y = yFor(endPartial.priceBefore);
+  stepG.appendChild(make('line', { x1, x2, y1: y, y2: y, stroke: '#7a6a3a', 'stroke-width': 1.5, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' }));
+}
+svg.appendChild(stepG);
+
+// x-axis quarter ticks + year labels
+const axisY = topMargin + chartH;
+const axisG = make('g');
+quarters.forEach((qu, i) => {
+  const cx = xCenter(i);
+  axisG.appendChild(make('line', { x1: cx, x2: cx, y1: axisY, y2: axisY + 5, stroke: '#6a6a6a', 'stroke-width': 1 }));
+  // quarter label (Q1/Q2/Q3/Q4)
+  axisG.appendChild(make('text', { x: cx, y: axisY + 20, 'text-anchor': 'middle', fill: '#8a8170', 'font-size': 12, 'letter-spacing': '0.04em' }, `Q${qu.q}`));
+});
+// year labels centered across each year's quarters
+const years = {};
+quarters.forEach((qu, i) => {
+  if (!years[qu.year]) years[qu.year] = { first: i, last: i };
+  else years[qu.year].last = i;
+});
+Object.entries(years).forEach(([yr, range]) => {
+  const cx = (xCenter(range.first) + xCenter(range.last)) / 2;
+  // year divider line
+  if (range.first > 0) {
+    axisG.appendChild(make('line', { x1: xCenter(range.first) - slotW/2, x2: xCenter(range.first) - slotW/2, y1: topMargin, y2: axisY + 38, stroke: '#3e3e3e', 'stroke-width': 1 }));
+  }
+  axisG.appendChild(make('text', { x: cx, y: axisY + 52, 'text-anchor': 'middle', fill: '#f4ecd8', 'font-size': 19, 'font-weight': 700, 'letter-spacing': '0.02em' }, yr));
+});
+svg.appendChild(axisG);
+
+// bars for each event
+const barsG = make('g');
+quarters.forEach((qu, i) => {
+  const ev = events[qu.key];
+  if (!ev) return;
+  const cx = xCenter(i);
+  const n = ev.length;
+  ev.forEach((e, k) => {
+    let bx, bw;
+    if (n === 1) { bw = 26; bx = cx - bw/2; }
+    else {
+      // two bars side by side inside the slot
+      bw = 14;
+      const offset = k === 0 ? -9 : 9;
+      bx = cx + offset - bw/2;
+    }
+    let fill = '#A11D20', stroke = 'none', rx = 3;
+    if (e.type === 'down')  fill = '#DDBB38';
+    if (e.type === 'intro') fill = '#6b6b6b';
+    if (e.type === 'reorg') fill = '#6b6b6b';
+
+    if (e.type === 'end') {
+      // no per-bar rendering — rendered as a blackout band across remaining quarters.
+    } else {
+      const y = yFor(e.price);
+      const h = axisY - y;
+      barsG.appendChild(make('rect', { x: bx, y, width: bw, height: h, rx, fill, stroke }));
+    }
+
+    if (e.type !== 'end') {
+      // price label above bar
+      const topY = yFor(e.price) - 10;
+      const priceText = `$${(e.price/1000).toFixed(0)}K`;
+      const labelX = (n === 1) ? cx : cx + (k === 0 ? -9 : 9);
+      barsG.appendChild(make('text', { x: labelX, y: topY, 'text-anchor': 'middle', fill: '#f4ecd8', 'font-size': 15, 'font-weight': 700 }, priceText));
+
+      // month label just above price
+      barsG.appendChild(make('text', { x: labelX, y: topY - 18, 'text-anchor': 'middle', fill: '#b8aa87', 'font-size': 12.5 }, e.label));
+
+      // peak pill
+      if (e.peak) {
+        const py = topY - 38;
+        barsG.appendChild(make('rect', { x: labelX - 44, y: py - 14, width: 88, height: 20, rx: 10, fill: '#DDBB38' }));
+        barsG.appendChild(make('text', { x: labelX, y: py, 'text-anchor': 'middle', fill: '#2c2c2c', 'font-size': 12, 'font-weight': 700, 'letter-spacing': '0.06em' }, 'ALL-TIME PEAK'));
+      }
+    }
+  });
+
+  // quarter note (below axis), aggregate of events that have notes — skip 'end' quarter (it has its own treatment)
+  const hasEnd = ev.some(e => e.type === 'end');
+  if (!hasEnd) {
+    const notes = ev.map(e => e.note).filter(Boolean);
+    if (notes.length) {
+      notes.forEach((nt, idx) => {
+        barsG.appendChild(make('text', { x: cx, y: axisY + 76 + idx * 15, 'text-anchor': 'middle', fill: '#b8aa87', 'font-size': 12 }, nt));
+      });
+    }
+  }
+});
+svg.appendChild(barsG);
+
+// thin black "end of purchase" vertical line, positioned at mid-Q1 2026 (Feb 14 ≈ midpoint of Q1)
+const endIdx = quarters.findIndex(qu => (events[qu.key] || []).some(e => e.type === 'end'));
+if (endIdx >= 0) {
+  const endG = make('g');
+  const lineX = xCenter(endIdx);     // mid-quarter ≈ mid-Feb
+  // vertical black line
+  endG.appendChild(make('line', { x1: lineX, x2: lineX, y1: topMargin, y2: axisY, stroke: '#000', 'stroke-width': 2.5 }));
+  // solid black cap at top
+  endG.appendChild(make('circle', { cx: lineX, cy: topMargin, r: 5, fill: '#000' }));
+  // gold pill floating just above the line
+  const pillY = topMargin - 26;
+  endG.appendChild(make('rect', { x: lineX - 58, y: pillY - 13, width: 116, height: 22, rx: 11, fill: '#DDBB38' }));
+  endG.appendChild(make('text', { x: lineX, y: pillY + 2, 'text-anchor': 'middle', fill: '#2c2c2c', 'font-size': 13, 'font-weight': 700, 'letter-spacing': '0.06em' }, 'FEB 14, 2026'));
+  // vertical label along the line (reads upward, centered in the chart area)
+  endG.appendChild(make('text', {
+    x: 0, y: 0,
+    transform: `translate(${lineX + 14}, ${topMargin + 340}) rotate(-90)`,
+    fill: '#f4ecd8', 'font-size': 14, 'font-weight': 700, 'letter-spacing': '0.14em'
+  }, 'PURCHASE OPTION ENDS'));
+  svg.appendChild(endG);
+}
+
+// footer: annotation highlighting biggest gaps
+const annG = make('g');
+// Flat run Q3 2022 → Q3 2023 at $15K (5 quarters inclusive, 4 between-change quarters)
+// Flat run Q4 2020 → Q1 2022 at $10K (5 quarters of stability)
+// Flat run Q2 2024 → Q1 2026 at $8K (~7 quarters)
+function annotateFlat(startIdx, endIdx, yPrice, text) {
+  const x1 = xCenter(startIdx) + slotW/2 + 1;
+  const x2 = xCenter(endIdx) - slotW/2 - 1;
+  const y = yFor(yPrice) - 18;
+  annG.appendChild(make('line', { x1, x2, y1: y, y2: y, stroke: '#DDBB38', 'stroke-width': 1, 'stroke-dasharray': '1 3' }));
+  // bracket tips
+  annG.appendChild(make('line', { x1, x2: x1, y1: y, y2: y + 6, stroke: '#DDBB38', 'stroke-width': 1 }));
+  annG.appendChild(make('line', { x1: x2, x2: x2, y1: y, y2: y + 6, stroke: '#DDBB38', 'stroke-width': 1 }));
+  annG.appendChild(make('text', { x: (x1 + x2) / 2, y: y - 5, 'text-anchor': 'middle', fill: '#DDBB38', 'font-size': 13, 'font-weight': 600, 'letter-spacing': '0.04em' }, text));
+}
+// find indices of quarters by key
+function qi(key) { return quarters.findIndex(qu => qu.key === key); }
+annotateFlat(qi('2020-Q4'), qi('2022-Q1'), 10000, 'flat at $10K · 5 quarters');
+annotateFlat(qi('2022-Q3'), qi('2023-Q3'), 15000, 'flat at $15K · 4 quarters');
+annotateFlat(qi('2024-Q2'), qi('2026-Q1'), 8000,  'flat at $8K · 7 quarters');
+svg.appendChild(annG);
+
+document.getElementById('chart').appendChild(svg);
+</script>
+</body>
+</html>

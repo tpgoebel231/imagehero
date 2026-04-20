@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageHero | Sounds</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --tt-red: #A11D20;
+            --tt-yellow: #DDBB38;
+            --tt-gray: #2C2C2C;
+            --tt-dark: #1f1f1f;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #121212;
+            color: #e5e7eb;
+            font-family: Inter, system-ui, sans-serif;
+        }
+        a {
+            color: #f3f4f6;
+        }
+        a:hover {
+            color: #DDBB38;
+        }
+        .card {
+            background: #1f1f1f;
+            border: 1px solid #333;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-3xl w-full space-y-8">
+        <header class="text-center">
+            <p class="text-sm uppercase tracking-[0.35em] text-gray-400 mb-4">ImageHero</p>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-white">Available sounds</h1>
+            <p class="mt-4 text-gray-300 text-sm sm:text-base leading-7">
+                If you visited <code>/sounds</code>, you can open any of the files below directly.
+            </p>
+        </header>
+
+        <section class="card p-8 space-y-6">
+            <div class="flex flex-col gap-4">
+                <a href="../index.html" class="inline-flex items-center gap-2 text-sm uppercase tracking-[0.35em] text-[#DDBB38] hover:text-white">
+                    <span>← Home</span>
+                </a>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <a href="FSD-Song.mp3" class="block rounded-2xl border border-[#333] bg-[#151515] p-4 transition hover:border-[#DDBB38] hover:bg-[#222]"><span class="block font-semibold">FSD-Song.mp3</span><span class="text-gray-400 text-sm">MP3 audio file</span></a>
+                    <a href="MeepMeep1.wav" class="block rounded-2xl border border-[#333] bg-[#151515] p-4 transition hover:border-[#DDBB38] hover:bg-[#222]"><span class="block font-semibold">MeepMeep1.wav</span><span class="text-gray-400 text-sm">WAV audio file</span></a>
+                    <a href="MeepMeep2.wav" class="block rounded-2xl border border-[#333] bg-[#151515] p-4 transition hover:border-[#DDBB38] hover:bg-[#222]"><span class="block font-semibold">MeepMeep2.wav</span><span class="text-gray-400 text-sm">WAV audio file</span></a>
+                    <a href="MeepMeep3.wav" class="block rounded-2xl border border-[#333] bg-[#151515] p-4 transition hover:border-[#DDBB38] hover:bg-[#222]"><span class="block font-semibold">MeepMeep3.wav</span><span class="text-gray-400 text-sm">WAV audio file</span></a>
+                    <a href="MeepMeep4.wav" class="block rounded-2xl border border-[#333] bg-[#151515] p-4 transition hover:border-[#DDBB38] hover:bg-[#222]"><span class="block font-semibold">MeepMeep4.wav</span><span class="text-gray-400 text-sm">WAV audio file</span></a>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-gray-500 text-sm">
+            Navigate to any file to stream or download it directly.
+        </footer>
+    </div>
+</body>
+</html>
